@@ -17,11 +17,21 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    dexOptions {
+        preDexLibraries = false
+    }
+
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+
     wearApp project(':wear')
     compile 'com.android.support:appcompat-v7:21.0.2'
+    compile 'com.android.support:mediarouter-v7:21.0.+'
     compile 'com.google.android.gms:play-services:6.5.87'
+    compile 'pl.droidsonroids.gif:android-gif-drawable:1.1.+'
+
+    compile project(':timelytextview')
 }
