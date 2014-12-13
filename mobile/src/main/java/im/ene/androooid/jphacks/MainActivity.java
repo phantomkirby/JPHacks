@@ -1,19 +1,20 @@
 package im.ene.androooid.jphacks;
 
+import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Typeface;
-import android.os.AsyncTask;
+import android.location.Location;
 import android.os.Bundle;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.MediaRouteActionProvider;
 import android.support.v7.media.MediaRouteSelector;
 import android.support.v7.media.MediaRouter;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,15 +24,13 @@ import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.interfaces.OnChartValueSelectedListener;
-import com.github.mikephil.charting.utils.XLabels;
 import com.github.mikephil.charting.utils.YLabels;
 import com.google.android.gms.cast.CastDevice;
-import com.google.android.gms.cast.CastMediaControlIntent;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.data.Bucket;
@@ -42,8 +41,11 @@ import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DataReadResult;
 import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.nineoldandroids.animation.ObjectAnimator;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -53,56 +55,88 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import im.ene.androooid.jphacks.callback.WearSensorCallback;
+import im.ene.androooid.jphacks.utils.StringUtils;
 import im.ene.androooid.jphacks.utils.WearSensorUtil;
 import im.ene.androooid.jphacks.widgets.SquareGifImageByWidth;
 
+import static im.ene.androooid.jphacks.Constants.CONNECTION_FAILURE_RESOLUTION_REQUEST;
+import static im.ene.androooid.jphacks.Constants.GEOFENCE_EXPIRATION_TIME;
+import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_ID;
+import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_LATITUDE;
+import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_LONGITUDE;
+import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_RADIUS_METERS;
 
-public class MainActivity extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnChartValueSelectedListener, WearSensorCallback
-{
-    //FOR WEAR AND UPDATING THE NUMBER OF STEPS IN BOTTOM LEFT OF ACTIVITY
-    private WearSensorUtil mWearSensorUtil;
 
+public class MainActivity extends ActionBarActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnChartValueSelectedListener, ResultCallback<DataReadResult>, WearSensorCallback {
+    public static final String TAG = MainActivity.class.getSimpleName();
     //GOOGLE FIT CONSTANT
     private static final int REQUEST_OAUTH = 1;
     /**
-     *  Track whether an authorization activity is stacking over the current activity, i.e. when
-     *  a known auth error is being resolved, such as showing the account chooser or presenting a
-     *  consent dialog. This avoids common duplications as might happen on screen rotations, etc.
+     * Track whether an authorization activity is stacking over the current activity, i.e. when
+     * a known auth error is being resolved, such as showing the account chooser or presenting a
+     * consent dialog. This avoids common duplications as might happen on screen rotations, etc.
      */
     private static final String AUTH_PENDING = "auth_state_pending";
-    private boolean authInProgress = false;
-
-    public static final String TAG = MainActivity.class.getCanonicalName();
     private static final String[] mMonths = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"};
+    private static final int LOCATION_INTERVAL = 5000;
+    // Internal List of Geofence objects. In a real app, these might be provided by an API based on
+    // locations within the user's proximity.
+    List<Geofence> mGeofenceList;
+    //FOR WEAR AND UPDATING THE NUMBER OF STEPS IN BOTTOM LEFT OF ACTIVITY
+    private WearSensorUtil mWearSensorUtil;
+    private boolean authInProgress = false;
     /**
      * Google Api Client stuffs defined here
      */
     private GoogleApiClient mGoogleApiClient;
-    private LocationRequest mLocationRequester;
-    /**
-     * Media router here
-     */
+    private LocationRequest mLocationRequest;
+    private DataReadRequest mDataReadRequest;
 
     private MediaRouter mMediaRouter;
     private MediaRouteSelector mMediaRouteSelector;
     private MediaRouter.Callback mMediaRouterCallback;
     private CastDevice mSelectedDevice;
 
+
+    private Location mLastLocation = StringUtils.TEST_LOCATION;
+    // These will store hard-coded geofences in this sample app.
+//    private SimpleGeofence mAndroidBuildingGeofence;
+//    private SimpleGeofence mYerbaBuenaGeofence;
+    private SimpleGeofence mTodaiGeofence;
+
+    // Persistent storage for geofences.
+    private SimpleGeofenceStore mGeofenceStorage;
+
+    // Stores the PendingIntent used to request geofence monitoring.
+    private PendingIntent mGeofenceRequestIntent;
+    private REQUEST_TYPE mRequestType;
     /**
      * Chart
      */
 
     private BarChart mChart;
-
     private SquareGifImageByWidth mAvatar;
 
     private TextView mTextStep;
+    private volatile ObjectAnimator objectAnimator = null;
+    private int mCounter = 0;
+    private Intent mChatHeadIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Rather than displayng this activity, simply display a toast indicating that the geofence
+        // service is being created. This should happen in less than a second.
+        if (!isGooglePlayServicesAvailable()) {
+            Log.e(TAG, "Google Play services unavailable.");
+            finish();
+            return;
+        }
+
+        // TODO: call chathead later
+        mChatHeadIntent = new Intent(this, ChatHeadService.class);
         mWearSensorUtil = new WearSensorUtil(this);
 
         //TODO: call chathead later
@@ -111,32 +145,22 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .addApi(ActivityRecognition.API)
+                .addApi(Fitness.API)
+                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
 
-        // Put application specific code above.
+        // Instantiate a new geofence storage area.
+        mGeofenceStorage = new SimpleGeofenceStore(this);
+        // Instantiate the current List of geofences.
+        mGeofenceList = new ArrayList<Geofence>();
 
-        if (savedInstanceState != null) {
-            authInProgress = savedInstanceState.getBoolean(AUTH_PENDING);
-        }
-
-        mMediaRouter = MediaRouter.getInstance(getApplicationContext());
-        // Create a MediaRouteSelector for the type of routes your app supports
-        mMediaRouteSelector = new MediaRouteSelector.Builder()
-                .addControlCategory(
-                        CastMediaControlIntent.categoryForCast(getResources()
-                                .getString(R.string.app_id))).build();
-        // Create a MediaRouter callback for discovery events
-        mMediaRouterCallback = new MyMediaRouterCallback();
-
-        mAvatar = (SquareGifImageByWidth) findViewById(R.id.image_avatar);
-        mAvatar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "clicked", Toast.LENGTH_SHORT).show();
-            }
-        });
+        /**
+         * init the geofences
+         * TODO: change logic to real locations?
+         */
+        createGeofences();
 
         // chart
         mChart = (BarChart) findViewById(R.id.chart_steps_count_week);
@@ -144,251 +168,216 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
         // enable the drawing of values
         mChart.setDrawYValues(true);
-
         mChart.setDrawValueAboveBar(true);
-
-        mChart.setDescription("");
-
+        mChart.setDescription("YOUR STEPS COUNT");
         // if more than 60 entries are displayed in the chart, no values will be
         // drawn
         mChart.setMaxVisibleValueCount(60);
-
         // disable 3D
         mChart.set3DEnabled(false);
-
         // scaling can now only be done on x- and y-axis separately
         mChart.setPinchZoom(false);
-
         // draw shadows for each bar that show the maximum value
         // mChart.setDrawBarShadow(true);
-
         // mChart.setDrawXLabels(false);
-
         mChart.setDrawGridBackground(false);
         mChart.setDrawHorizontalGrid(true);
         mChart.setDrawVerticalGrid(false);
         // mChart.setDrawYLabels(false);
-
         // sets the text size of the values inside the chart
         mChart.setValueTextSize(10f);
-
         mChart.setDrawBorder(false);
         // mChart.setBorderPositions(new BorderPosition[] {BorderPosition.LEFT,
         // BorderPosition.RIGHT});
-
         Typeface tf = Typeface.createFromAsset(getAssets(), "OpenSans-Regular.ttf");
-
-        XLabels xl = mChart.getXLabels();
-        xl.setPosition(XLabels.XLabelPosition.BOTTOM);
-        xl.setCenterXLabelText(true);
-        xl.setTypeface(tf);
-
+//        XLabels xl = mChart.getXLabels();
+//        xl.setPosition(XLabels.XLabelPosition.BOTTOM);
+//        xl.setCenterXLabelText(false);
+//        xl.setTypeface(tf);
         YLabels yl = mChart.getYLabels();
         yl.setTypeface(tf);
         yl.setLabelCount(8);
-        yl.setPosition(YLabels.YLabelPosition.BOTH_SIDED);
+        yl.setPosition(YLabels.YLabelPosition.LEFT);
 
         mChart.setValueTypeface(tf);
-
-        setData(7, 50);
 
         /**
          * test timelytextview
          */
 
         mTextStep = (TextView) findViewById(R.id.text_step_count);
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
+
+//        mTextStep = (TimelyView) findViewById(R.id.text_step_count);
+//
+//        mTextStep.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                objectAnimator =  mTextStep.animate(mCounter, ++mCounter);
+//                objectAnimator.setDuration(1000);
+//            }
+//        });
+
+        //TODO: CALL THIS METHOD WHEN USER COMES BACK HOME
+
+        // FIXME (eneim): the app will automatically call necessary stuff by Callbacks
+//        trackUserComingHome();
         mTextStep.setText("0");
 
         //TODO: CALL THIS METHOD WHEN USER COMES BACK HOME
         //trackUserComingHome();
     }
 
-    private void trackUserComingHome()
-    {
+    private void trackUserComingHome() {
         buildFitnessClient();
     }
 
     /**
-     *  Build a {@link GoogleApiClient} that will authenticate the user and allow the application
-     *  to connect to Fitness APIs. The scopes included should match the scopes your app needs
-     *  (see documentation for details). Authentication will occasionally fail intentionally,
-     *  and in those cases, there will be a known resolution, which the OnConnectionFailedListener()
-     *  can address. Examples of this include the user never having signed in before, or having
-     *  multiple accounts on the device and needing to specify which account to use, etc.
+     * Build a {@link GoogleApiClient} that will authenticate the user and allow the application
+     * to connect to Fitness APIs. The scopes included should match the scopes your app needs
+     * (see documentation for details). Authentication will occasionally fail intentionally,
+     * and in those cases, there will be a known resolution, which the OnConnectionFailedListener()
+     * can address. Examples of this include the user never having signed in before, or having
+     * multiple accounts on the device and needing to specify which account to use, etc.
      */
-    private void buildFitnessClient()
-    {
+    private void buildFitnessClient() {
         // Create the Google API Client
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Fitness.API)
-                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
-                .addConnectionCallbacks(
-                        new GoogleApiClient.ConnectionCallbacks() {
-
-                            @Override
-                            public void onConnected(Bundle bundle) {
-                                Log.i(TAG, "Connected!!!");
-                                // Now you can make calls to the Fitness APIs.
-                                // Put application specific code here.
-                                new RetrieveData().execute();
-                            }
-
-                            @Override
-                            public void onConnectionSuspended(int i) {
-                                // If your connection to the sensor gets lost at some point,
-                                // you'll be able to determine the reason and react to it here.
-                                if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
-                                    Log.i(TAG, "Connection lost.  Cause: Network Lost.");
-                                } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
-                                    Log.i(TAG, "Connection lost.  Reason: Service Disconnected");
-                                }
-                            }
-                        }
-                )
-                .addOnConnectionFailedListener(
-                        new GoogleApiClient.OnConnectionFailedListener() {
-                            // Called whenever the API client fails to connect.
-                            @Override
-                            public void onConnectionFailed(ConnectionResult result) {
-                                Log.i(TAG, "Connection failed. Cause: " + result.toString());
-                                if (!result.hasResolution()) {
-                                    // Show the localized error dialog
-                                    GooglePlayServicesUtil.getErrorDialog(result.getErrorCode(),
-                                            MainActivity.this, 0).show();
-                                    return;
-                                }
-                                // The failure has a resolution. Resolve it.
-                                // Called typically when the app is not yet authorized, and an
-                                // authorization dialog is displayed to the user.
-                                if (!authInProgress) {
-                                    try {
-                                        Log.i(TAG, "Attempting to resolve failed connection");
-                                        authInProgress = true;
-                                        result.startResolutionForResult(MainActivity.this,
-                                                REQUEST_OAUTH);
-                                    } catch (IntentSender.SendIntentException e) {
-                                        Log.e(TAG,
-                                                "Exception while starting resolution activity", e);
-                                    }
-                                }
-                            }
-                        }
-                )
-                .build();
-    }
-
-    // the asynctask thread
-    private class RetrieveData extends AsyncTask<Void, Void, String>
-    {
-        @Override
-        protected String doInBackground(Void... params)
-        {
-            return retrieveNumberOfStepsAsString();
-        }
-
-        @Override
-        protected void onPostExecute(String numSteps)
-        {
-            super.onPostExecute(numSteps);
-            Toast.makeText(MainActivity.this, numSteps, Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private String retrieveNumberOfStepsAsString()
-    {
-        Calendar cal = Calendar.getInstance();
-        Date now = new Date();
-        cal.setTime(now);
-        long endTime = cal.getTimeInMillis();
-        cal.add(Calendar.WEEK_OF_YEAR, -1);
-        long startTime = cal.getTimeInMillis();
-
-        //original
-//        DataReadRequest readRequest = new DataReadRequest.Builder()
-//                // The data request can specify multiple data types to return, effectively
-//                // combining multiple data queries into one call.
-//                // In this example, it's very unlikely that the request is for several hundred
-//                // datapoints each consisting of a few steps and a timestamp.  The more likely
-//                // scenario is wanting to see how many steps were walked per day, for 7 days.
-//                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-//                        // Analogous to a "Group By" in SQL, defines how data should be aggregated.
-//                        // bucketByTime allows for a time span, whereas bucketBySession would allow
-//                        // bucketing by "sessions", which would need to be defined in code.
-//                .bucketByTime(1, TimeUnit.DAYS)
-//                .setTimeRange(userLeftHomeTime, System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+//        mGoogleApiClient = new GoogleApiClient.Builder(this)
+//                .addApi(Fitness.API)
+//                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
+//                .addConnectionCallbacks(
+//                        new GoogleApiClient.ConnectionCallbacks() {
+//
+//                            @Override
+//                            public void onConnected(Bundle bundle) {
+//                                Log.i(TAG, "Connected!!!");
+//                                // Now you can make calls to the Fitness APIs.
+//                                // Put application specific code here.
+//                                new RetrieveData().execute();
+//                            }
+//
+//                            @Override
+//                            public void onConnectionSuspended(int i) {
+//                                // If your connection to the sensor gets lost at some point,
+//                                // you'll be able to determine the reason and react to it here.
+//                                if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
+//                                    Log.i(TAG, "Connection lost.  Cause: Network Lost.");
+//                                } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
+//                                    Log.i(TAG, "Connection lost.  Reason: Service Disconnected");
+//                                }
+//                            }
+//                        }
+//                )
+//                .addOnConnectionFailedListener(
+//                        new GoogleApiClient.OnConnectionFailedListener() {
+//                            // Called whenever the API client fails to connect.
+//                            @Override
+//                            public void onConnectionFailed(ConnectionResult result) {
+//                                Log.i(TAG, "Connection failed. Cause: " + result.toString());
+//                                if (!result.hasResolution()) {
+//                                    // Show the localized error dialog
+//                                    GooglePlayServicesUtil.getErrorDialog(result.getErrorCode(),
+//                                            MainActivity.this, 0).show();
+//                                    return;
+//                                }
+//                                // The failure has a resolution. Resolve it.
+//                                // Called typically when the app is not yet authorized, and an
+//                                // authorization dialog is displayed to the user.
+//                                if (!authInProgress) {
+//                                    try {
+//                                        Log.i(TAG, "Attempting to resolve failed connection");
+//                                        authInProgress = true;
+//                                        result.startResolutionForResult(MainActivity.this,
+//                                                REQUEST_OAUTH);
+//                                    } catch (IntentSender.SendIntentException e) {
+//                                        Log.e(TAG,
+//                                                "Exception while starting resolution activity", e);
+//                                    }
+//                                }
+//                            }
+//                        }
+//                )
 //                .build();
 
         //new
-        PendingResult<DataReadResult> pendingResult =
-                Fitness.HistoryApi.readData(mGoogleApiClient, new DataReadRequest.Builder()
-                        .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-                        .bucketByTime(1, TimeUnit.DAYS)
-                                //userLeftHomeTime = startTime, current system time = end time
-                        .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                        .build());
+//        PendingResult<DataReadResult> pendingResult =
+//                Fitness.HistoryApi.readData(mGoogleApiClient, new DataReadRequest.Builder()
+//                        .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+//                        .bucketByTime(1, TimeUnit.DAYS)
+//                                //userLeftHomeTime = startTime, current system time = end time
+//                        .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+//                        .build());
 
         //original
 //        DataReadResult dataReadResult =
 //                Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
         //new
-        DataReadResult dataReadResult = pendingResult.await();
+//        DataReadResult dataReadResult = pendingResult.await();
 
 
         //TODO: for eneim... put these data into the graph however you like...
         //bucket is basically the days, and the most important number is dp.getValue(field)
         //and field = steps in order to get the value of steps in that day.
-        if (dataReadResult.getBuckets().size() > 0)
-        {
-            Log.i(TAG, "Number of returned buckets of DataSets is: "
-                    + dataReadResult.getBuckets().size());
-            for (Bucket bucket : dataReadResult.getBuckets()) {
-                List<DataSet> dataSets = bucket.getDataSets();
-                for (DataSet dataSet : dataSets) {
-                    Log.i("", "Data returned for Data type: " + dataSet.getDataType().getName());
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/M/yyyy hh:mm:ss");
+//        if (dataReadResult.getBuckets().size() > 0)
+//        {
+//            Log.i(TAG, "Number of returned buckets of DataSets is: "
+//                    + dataReadResult.getBuckets().size());
+//            for (Bucket bucket : dataReadResult.getBuckets()) {
+//                List<DataSet> dataSets = bucket.getDataSets();
+//                for (DataSet dataSet : dataSets) {
+//                    Log.i("", "Data returned for Data type: " + dataSet.getDataType().getName());
+//                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/M/yyyy hh:mm:ss");
+//
+//                    for (DataPoint dp : dataSet.getDataPoints()) {
+//                        Log.i("", "Data pointLOL:");
+//                        Log.i("", "\tTypeLOL: " + dp.getDataType().getName());
+//                        Log.i("", "\tStartLOL: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+//                        Log.i("", "\tEndLOL: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
+//                        for(Field field : dp.getDataType().getFields()) {
+//                            Log.i("", "\tFieldLOL: " + field.getName() +
+//                                    " ValueLOL: " + dp.getValue(field));
+//                            //only this one gets called
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        else if (dataReadResult.getDataSets().size() > 0) {
+//            Log.i(TAG, "Number of returned DataSets is: "
+//                    + dataReadResult.getDataSets().size());
+//            for (DataSet dataSet : dataReadResult.getDataSets()) {
+//                Log.i(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+//                SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss");
+//
+//                for (DataPoint dp : dataSet.getDataPoints()) {
+//                    Log.i(TAG, "Data point:");
+//                    Log.i(TAG, "\tType: " + dp.getDataType().getName());
+//                    Log.i(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+//                    Log.i(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
+//                    for (Field field : dp.getDataType().getFields()) {
+//                        Log.i(TAG, "\tField: " + field.getName() +
+//                                " Value: " + dp.getValue(field));
+//                        //this one does not get called
+//                    }
+//                }
+//            }
+//        }
+//
+//        //CALL DIALOG?
+//        return null;
 
-                    for (DataPoint dp : dataSet.getDataPoints()) {
-                        Log.i("", "Data pointLOL:");
-                        Log.i("", "\tTypeLOL: " + dp.getDataType().getName());
-                        Log.i("", "\tStartLOL: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-                        Log.i("", "\tEndLOL: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
-                        for(Field field : dp.getDataType().getFields()) {
-                            Log.i("", "\tFieldLOL: " + field.getName() +
-                                    " ValueLOL: " + dp.getValue(field));
-                            //only this one gets called
-                        }
-                    }
-                }
-            }
-        }
-        else if (dataReadResult.getDataSets().size() > 0) {
-            Log.i(TAG, "Number of returned DataSets is: "
-                    + dataReadResult.getDataSets().size());
-            for (DataSet dataSet : dataReadResult.getDataSets()) {
-                Log.i(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
-                SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss");
-
-                for (DataPoint dp : dataSet.getDataPoints()) {
-                    Log.i(TAG, "Data point:");
-                    Log.i(TAG, "\tType: " + dp.getDataType().getName());
-                    Log.i(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-                    Log.i(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
-                    for (Field field : dp.getDataType().getFields()) {
-                        Log.i(TAG, "\tField: " + field.getName() +
-                                " Value: " + dp.getValue(field));
-                        //this one does not get called
-                    }
-                }
-            }
-        }
-
-        //CALL DIALOG?
-        return null;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        stopService(mChatHeadIntent);
 
         // Add the callback to start device discovery
         mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
@@ -403,18 +392,22 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         // Remove the callback to stop device discovery
         mMediaRouter.removeCallback(mMediaRouterCallback);
         mWearSensorUtil.removeCallback();
+        startService(mChatHeadIntent);
         super.onPause();
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mGoogleApiClient != null)
+            mGoogleApiClient.disconnect();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        MenuItem mediaRouteMenuItem = menu.findItem(R.id.media_route_menu_item);
-        MediaRouteActionProvider mediaRouteActionProvider = (MediaRouteActionProvider) MenuItemCompat
-                .getActionProvider(mediaRouteMenuItem);
-        // Set the MediaRouteActionProvider selector for device discovery.
-        mediaRouteActionProvider.setRouteSelector(mMediaRouteSelector);
         return true;
     }
 
@@ -431,56 +424,91 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     @Override
     public void onConnected(Bundle bundle) {
 
+//        new RetrieveData().execute();
+
+        mLocationRequest = LocationRequest.create();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(LOCATION_INTERVAL); // Update location every second
+
+        LocationServices.FusedLocationApi.setMockMode(mGoogleApiClient, true);
+        LocationServices.FusedLocationApi.setMockLocation(mGoogleApiClient, StringUtils.TEST_LOCATION);
+
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
+
+        // Get the PendingIntent for the geofence monitoring request.
+        // Send a request to add the current geofences.
+        mGeofenceRequestIntent = getGeofenceTransitionPendingIntent();
+        LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, mGeofenceList,
+                mGeofenceRequestIntent);
+        Toast.makeText(this, getString(R.string.start_geofence_service), Toast.LENGTH_SHORT).show();
+
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.WEEK_OF_YEAR, -1);
+        long startTime = cal.getTimeInMillis();
+
+        mDataReadRequest = new DataReadRequest.Builder()
+                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .bucketByTime(1, TimeUnit.DAYS)
+                        //userLeftHomeTime = startTime, current system time = end time
+                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .build();
+
+        Fitness.HistoryApi.readData(mGoogleApiClient, mDataReadRequest).setResultCallback(this);
+
     }
 
     @Override
     public void onConnectionSuspended(int i) {
+        if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
+            Log.i(TAG, "Connection lost.  Cause: Network Lost.");
+        } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
+            Log.i(TAG, "Connection lost.  Reason: Service Disconnected");
+        }
 
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        // Connect to the Fitness API
-        Log.i(TAG, "Connecting...");
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.disconnect();
+        if (null != mGeofenceRequestIntent) {
+            LocationServices.GeofencingApi.removeGeofences(mGoogleApiClient, mGeofenceRequestIntent);
         }
         mWearSensorUtil.stop();
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_OAUTH) {
-            authInProgress = false;
-            if (resultCode == RESULT_OK) {
-                // Make sure the app is not already connected or attempting to connect
-                if (!mGoogleApiClient.isConnecting() && !mGoogleApiClient.isConnected()) {
-                    mGoogleApiClient.connect();
-                }
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
+        if (!connectionResult.hasResolution()) {
+            // Show the localized error dialog
+            GooglePlayServicesUtil.getErrorDialog(connectionResult.getErrorCode(),
+                    MainActivity.this, 0).show();
+            return;
+        } else {
+            try {
+                connectionResult.startResolutionForResult(this,
+                        CONNECTION_FAILURE_RESOLUTION_REQUEST);
+            } catch (IntentSender.SendIntentException e) {
+                Log.e(TAG, "Exception while resolving connection error.", e);
             }
         }
+        // The failure has a resolution. Resolve it.
+        // Called typically when the app is not yet authorized, and an
+        // authorization dialog is displayed to the user.
+        if (!authInProgress) {
+            try {
+                Log.i(TAG, "Attempting to resolve failed connection");
+                authInProgress = true;
+                connectionResult.startResolutionForResult(MainActivity.this,
+                        REQUEST_OAUTH);
+            } catch (IntentSender.SendIntentException e) {
+                Log.e(TAG,
+                        "Exception while starting resolution activity", e);
+            }
+        }
+
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState)
-    {
-        super.onSaveInstanceState(outState);
-        outState.putBoolean(AUTH_PENDING, authInProgress);
-    }
-
-
     public void onValueSelected(Entry entry, int i) {
 
     }
@@ -490,8 +518,11 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
     }
 
-    private void setData(int count, float range)
-    {
+    private void setData(DataReadResult dataReadResult) {
+
+    }
+
+    private void setData(int count, float range) {
 
         ArrayList<String> xVals = new ArrayList<String>();
         for (int i = 0; i < count; i++) {
@@ -501,8 +532,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
 
         for (int i = 0; i < count; i++) {
-            float mult = (range + 1);
-            float val = (float) (Math.random() * mult);
+            int mult = (int) (range + 1);
+            int val = 5000 + (int) (Math.random() * mult);
             yVals1.add(new BarEntry(val, i));
         }
 
@@ -517,45 +548,205 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         mChart.setData(data);
     }
 
-    private class MyMediaRouterCallback extends MediaRouter.Callback
-    {
+    @Override
+    public void onLocationChanged(Location location) {
 
-        @Override
-        public void onRouteSelected(MediaRouter router, MediaRouter.RouteInfo info) {
-            Log.d(TAG, "onRouteSelected");
-            // Handle route selection.
-            mSelectedDevice = CastDevice.getFromBundle(info.getExtras());
+        mLastLocation = StringUtils.TEST_LOCATION;
+    }
 
-            // Just display a message for now; In a real app this would be the
-            // hook  to connect to the selected device and launch the receiver
-            // app
-            Toast.makeText(MainActivity.this,
-                    "TODO: Connect", Toast.LENGTH_LONG).show();
+    /**
+     * In this sample, the geofences are predetermined and are hard-coded here. A real app might
+     * dynamically create geofences based on the user's location.
+     */
+    public void createGeofences() {
+        // Create internal "flattened" objects containing the geofence data.
+//        mAndroidBuildingGeofence = new SimpleGeofence(
+//                ANDROID_BUILDING_ID,                // geofenceId.
+//                ANDROID_BUILDING_LATITUDE,
+//                ANDROID_BUILDING_LONGITUDE,
+//                ANDROID_BUILDING_RADIUS_METERS,
+//                GEOFENCE_EXPIRATION_TIME,
+//                Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT
+//        );
+//        mYerbaBuenaGeofence = new SimpleGeofence(
+//                YERBA_BUENA_ID,                // geofenceId.
+//                YERBA_BUENA_LATITUDE,
+//                YERBA_BUENA_LONGITUDE,
+//                YERBA_BUENA_RADIUS_METERS,
+//                GEOFENCE_EXPIRATION_TIME,
+//                Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT
+//        );
+
+        mTodaiGeofence = new SimpleGeofence(
+                TODAI_BUILDING_ID,                // geofenceId.
+                TODAI_BUILDING_LATITUDE,
+                TODAI_BUILDING_LONGITUDE,
+                TODAI_BUILDING_RADIUS_METERS,
+                GEOFENCE_EXPIRATION_TIME,
+                Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT
+        );
+
+        // Store these flat versions in SharedPreferences and add them to the geofence list.
+//        mGeofenceStorage.setGeofence(ANDROID_BUILDING_ID, mAndroidBuildingGeofence);
+//        mGeofenceStorage.setGeofence(YERBA_BUENA_ID, mYerbaBuenaGeofence);
+        mGeofenceStorage.setGeofence(TODAI_BUILDING_ID, mTodaiGeofence);
+//        mGeofenceList.add(mAndroidBuildingGeofence.toGeofence());
+//        mGeofenceList.add(mYerbaBuenaGeofence.toGeofence());
+        mGeofenceList.add(mTodaiGeofence.toGeofence());
+    }
+
+    /**
+     * Checks if Google Play services is available.
+     *
+     * @return true if it is.
+     */
+    private boolean isGooglePlayServicesAvailable() {
+        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        if (ConnectionResult.SUCCESS == resultCode) {
+            if (Log.isLoggable(TAG, Log.DEBUG)) {
+                Log.d(TAG, "Google Play services is available.");
+            }
+            return true;
+        } else {
+            Log.e(TAG, "Google Play services is unavailable.");
+            return false;
+        }
+    }
+
+    /**
+     * Create a PendingIntent that triggers GeofenceTransitionIntentService when a geofence
+     * transition occurs.
+     */
+    private PendingIntent getGeofenceTransitionPendingIntent() {
+        Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    @Override
+    public void onResult(DataReadResult dataReadResult) {
+
+        // if any of these occurs, then there is no result
+        if (dataReadResult.getDataSets().size() <= 0 && dataReadResult.getBuckets().size() <= 0)
+            return;
+
+        /**
+         *  from here we set value to the chart;
+         */
+
+        // this is a demo
+        setData(3, 100);
+
+        //TODO: for eneim... put these data into the graph however you like...
+        //bucket is basically the days, and the most important number is dp.getValue(field)
+        //and field = steps in order to get the value of steps in that day.
+        if (dataReadResult.getBuckets().size() > 0) {
+            Log.i(TAG, "Number of returned buckets of DataSets is: "
+                    + dataReadResult.getBuckets().size());
+            for (Bucket bucket : dataReadResult.getBuckets()) {
+                List<DataSet> dataSets = bucket.getDataSets();
+                for (DataSet dataSet : dataSets) {
+                    Log.i("", "Data returned for Data type: " + dataSet.getDataType().getName());
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/M/yyyy hh:mm:ss");
+
+                    for (DataPoint dp : dataSet.getDataPoints()) {
+                        Log.i("", "Data pointLOL:");
+                        Log.i("", "\tTypeLOL: " + dp.getDataType().getName());
+                        Log.i("", "\tStartLOL: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+                        Log.i("", "\tEndLOL: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
+                        for (Field field : dp.getDataType().getFields()) {
+                            Log.i("", "\tFieldLOL: " + field.getName() +
+                                    " ValueLOL: " + dp.getValue(field));
+                        }
+                    }
+                }
+            }
+        } else if (dataReadResult.getDataSets().size() > 0) {
+            Log.i(TAG, "Number of returned DataSets is: "
+                    + dataReadResult.getDataSets().size());
+            for (DataSet dataSet : dataReadResult.getDataSets()) {
+                Log.i(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+                SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss");
+
+                for (DataPoint dp : dataSet.getDataPoints()) {
+                    Log.i(TAG, "Data point:");
+                    Log.i(TAG, "\tType: " + dp.getDataType().getName());
+                    Log.i(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+                    Log.i(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
+                    for (Field field : dp.getDataType().getFields()) {
+                        Log.i(TAG, "\tField: " + field.getName() +
+                                " Value: " + dp.getValue(field));
+                    }
+                }
+            }
         }
 
-        @Override
-        public void onRouteUnselected(MediaRouter router, MediaRouter.RouteInfo info) {
-            Log.d(TAG, "onRouteUnselected: info=" + info);
-            mSelectedDevice = null;
+        // I prefer we have the value of today
+        // call this with suitable value
+        // showNotificationDialog(this, int1, int2);
+
+    }
+
+    // TODO: set action for each situation
+    private void showNotificationDialog(Context context, int todayResult, int averageResult) {
+        if (todayResult > averageResult) {
+            // prositive notification here
+            AlertDialog dialog = new AlertDialog.Builder(context).setMessage("Good Jobs")
+                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    }).create();
+
+            dialog.show();
+
+        } else {
+            // negative notification here
+            // prositive notification here
+            AlertDialog dialog = new AlertDialog.Builder(context).setMessage("Good Jobs")
+                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    }).create();
+
+            dialog.show();
         }
     }
 
     @Override
-    protected void onDestroy()
-    {
+    protected void onDestroy() {
         mWearSensorUtil.destroy();
         super.onDestroy();
     }
 
     @Override
-    public void onHeartRateChanged(float heartRate)
-    {
+    public void onHeartRateChanged(float heartRate) {
         //do nothing in this implemented method
         //Log.d(TAG, "heart rate:"+heartRate);
     }
+
     @Override
     public void onStepDetected(int sumOfSteps) {
-        Log.d(TAG, "steps:"+sumOfSteps);
-        mTextStep.setText(sumOfSteps);
+        Log.d(TAG, "steps:" + sumOfSteps);
+        mTextStep.setText(sumOfSteps + "");
+    }
+
+    // Defines the allowable request types (in this example, we only add geofences).
+    private enum REQUEST_TYPE {
+        ADD
     }
 }

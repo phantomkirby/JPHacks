@@ -192,6 +192,7 @@ public class Magnet implements View.OnTouchListener {
                         mListener.onIconClick(mIconView, x, y);
                     }
                 }
+
                 hideRemoveView();
                 isBeingDragged = false;
                 eaten = false;
@@ -205,6 +206,7 @@ public class Magnet implements View.OnTouchListener {
             lastXPose = x;
             lastYPose = y;
         }
+
         return eaten;
     }
 
