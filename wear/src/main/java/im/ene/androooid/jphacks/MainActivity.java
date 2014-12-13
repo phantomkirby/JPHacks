@@ -70,7 +70,7 @@ public class MainActivity extends SensorMonitorActivity implements SensorEventLi
         builder.append(heartRate);
         mTextView.setText(builder.toString());
 
-//        Log.d(TAG, builder.toString());
+        Log.d(TAG, builder.toString());
     }
 
     @Override
