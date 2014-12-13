@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package im.ene.androooid.jphacks;
+package im.ene.androooid.jphacks.model;
 
 import com.google.android.gms.location.Geofence;
 

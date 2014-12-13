@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package im.ene.androooid.jphacks;
+package im.ene.androooid.jphacks.utils;
 
 import android.net.Uri;
 

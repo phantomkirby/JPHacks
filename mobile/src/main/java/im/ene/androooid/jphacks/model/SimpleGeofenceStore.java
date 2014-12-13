@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package im.ene.androooid.jphacks;
+package im.ene.androooid.jphacks.model;
 
-import static im.ene.androooid.jphacks.Constants.INVALID_FLOAT_VALUE;
-import static im.ene.androooid.jphacks.Constants.INVALID_INT_VALUE;
-import static im.ene.androooid.jphacks.Constants.INVALID_LONG_VALUE;
-import static im.ene.androooid.jphacks.Constants.KEY_EXPIRATION_DURATION;
-import static im.ene.androooid.jphacks.Constants.KEY_LATITUDE;
-import static im.ene.androooid.jphacks.Constants.KEY_LONGITUDE;
-import static im.ene.androooid.jphacks.Constants.KEY_PREFIX;
-import static im.ene.androooid.jphacks.Constants.KEY_RADIUS;
-import static im.ene.androooid.jphacks.Constants.KEY_TRANSITION_TYPE;
+import static im.ene.androooid.jphacks.utils.Constants.INVALID_FLOAT_VALUE;
+import static im.ene.androooid.jphacks.utils.Constants.INVALID_INT_VALUE;
+import static im.ene.androooid.jphacks.utils.Constants.INVALID_LONG_VALUE;
+import static im.ene.androooid.jphacks.utils.Constants.KEY_EXPIRATION_DURATION;
+import static im.ene.androooid.jphacks.utils.Constants.KEY_LATITUDE;
+import static im.ene.androooid.jphacks.utils.Constants.KEY_LONGITUDE;
+import static im.ene.androooid.jphacks.utils.Constants.KEY_PREFIX;
+import static im.ene.androooid.jphacks.utils.Constants.KEY_RADIUS;
+import static im.ene.androooid.jphacks.utils.Constants.KEY_TRANSITION_TYPE;
 
 import android.content.Context;
 import android.content.SharedPreferences;

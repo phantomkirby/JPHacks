@@ -41,10 +41,10 @@
         </activity>
 
         <!-- SERVICES -->
-        <service android:name=".ChatHeadService" />
+        <service android:name=".service.ChatHeadService" />
 
         <service
-            android:name=".GeofenceTransitionsIntentService"
+            android:name=".service.GeofenceTransitionsIntentService"
             android:exported="false"></service>
 
         <meta-data

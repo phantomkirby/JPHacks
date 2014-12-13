@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Typeface;
 import android.location.Location;
+import android.media.AudioTrack;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.media.MediaRouteSelector;
@@ -55,16 +56,22 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import im.ene.androooid.jphacks.callback.WearSensorCallback;
+import im.ene.androooid.jphacks.model.SimpleGeofence;
+import im.ene.androooid.jphacks.model.SimpleGeofenceStore;
+import im.ene.androooid.jphacks.service.ChatHeadService;
+import im.ene.androooid.jphacks.service.GeofenceTransitionsIntentService;
 import im.ene.androooid.jphacks.utils.StringUtils;
+import im.ene.androooid.jphacks.utils.TextToSpeechTask;
 import im.ene.androooid.jphacks.utils.WearSensorUtil;
 import im.ene.androooid.jphacks.widgets.SquareGifImageByWidth;
+import jp.ne.docomo.smt.dev.common.http.AuthApiKey;
 
-import static im.ene.androooid.jphacks.Constants.CONNECTION_FAILURE_RESOLUTION_REQUEST;
-import static im.ene.androooid.jphacks.Constants.GEOFENCE_EXPIRATION_TIME;
-import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_ID;
-import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_LATITUDE;
-import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_LONGITUDE;
-import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_RADIUS_METERS;
+import static im.ene.androooid.jphacks.utils.Constants.CONNECTION_FAILURE_RESOLUTION_REQUEST;
+import static im.ene.androooid.jphacks.utils.Constants.GEOFENCE_EXPIRATION_TIME;
+import static im.ene.androooid.jphacks.utils.Constants.TODAI_BUILDING_ID;
+import static im.ene.androooid.jphacks.utils.Constants.TODAI_BUILDING_LATITUDE;
+import static im.ene.androooid.jphacks.utils.Constants.TODAI_BUILDING_LONGITUDE;
+import static im.ene.androooid.jphacks.utils.Constants.TODAI_BUILDING_RADIUS_METERS;
 
 
 public class MainActivity extends ActionBarActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnChartValueSelectedListener, ResultCallback<DataReadResult>, WearSensorCallback {
@@ -126,6 +133,8 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        AuthApiKey.initializeAuth(StringUtils.DOCOMO_API_KEY);
 
         // Rather than displayng this activity, simply display a toast indicating that the geofence
         // service is being created. This should happen in less than a second.
@@ -423,7 +432,12 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
     @Override
     public void onConnected(Bundle bundle) {
-
+        new TextToSpeechTask("せつぞくできました", new TextToSpeechTask.TextToSpeechCallback() {
+            @Override
+            public void onAudioCallback(AudioTrack track) {
+                track.play();
+            }
+        }).execute();
 //        new RetrieveData().execute();
 
         mLocationRequest = LocationRequest.create();
