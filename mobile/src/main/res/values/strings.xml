@@ -5,8 +5,4 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
 
-    <!-- Ntt Docomo API -->
-    <string name="ntt_api_client_id">6Qz3lsYQWMflyv1tYr0vSVzeLhi8O84XXy5LBkYzkEAf</string>
-    <string name="ntt_api_client_secret">!I?aG]'Ifq+TSIRq#O_/</string>
-    <string name="ntt_api_key">67366a64566a396a32723134637669734273456766497a744132677142415858446a30333473624d656d41</string>
 </resources>
