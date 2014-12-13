@@ -1,1 +1,5 @@
-include ':mobile', ':tv', ':wear'
+<<<<<<< HEAD
+include ':mobile', ':tv', ':wear', ':timelytextview'
+=======
+include ':mobile', ':tv', ':wear', ':magnet'
+>>>>>>> upstream/master
