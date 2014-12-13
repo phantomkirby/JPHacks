@@ -55,6 +55,16 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".WearSensorSampleActivity"
+            android:label="@string/title_activity_wear_sensor_sample">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            </activity>
     </application>
 
 </manifest>

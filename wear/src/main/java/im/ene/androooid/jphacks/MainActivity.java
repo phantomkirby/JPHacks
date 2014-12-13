@@ -7,13 +7,19 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.wearable.view.WatchViewStub;
+import android.util.Log;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class MainActivity extends Activity implements SensorEventListener {
+public class MainActivity extends SensorMonitorActivity implements SensorEventListener, SensorMonitorCallback {
+    private static final String TAG = "MainActivity";
+
+    public static final String SENSOR_TYPE_HEART_RATE = "heartRate";
+    public static final String SENSOR_TYPE_STEPS = "steps";
+
     private TextView mTextView;
     private ImageView mImageViewHeart;
 
@@ -40,43 +46,56 @@ public class MainActivity extends Activity implements SensorEventListener {
             }
         });
 
-        mSensorManager = ((SensorManager)getSystemService(SENSOR_SERVICE));
-        mHeartRateSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
+        setCallback(this);
     }
 
     @Override
     protected void onResume(){
         super.onResume();
-
-        mSensorManager.registerListener(this, mHeartRateSensor, SensorManager.SENSOR_DELAY_GAME);
     }
 
     @Override
     protected void onPause() {
-        mSensorManager.unregisterListener(this, mHeartRateSensor);
-
         super.onPause();
     }
 
     @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (mTextView==null) return; // not loaded yet
+    public void onHeartRateChanged(float heartRate, int accuracy) {
+        // send to mobile
+        sendSensorToMobile(SENSOR_TYPE_HEART_RATE, heartRate);
 
-        float heartRate = event.values[0];
-
-        if (heartRate < 1.0) // too low (may be an error)
-            return;
-
+        // display value
         StringBuilder builder = new StringBuilder();
         builder.append("heart rate:");
-        builder.append(event.values[0]);
+        builder.append(heartRate);
         mTextView.setText(builder.toString());
 
-        // TODO: change animation speed according to the heart rate
+        Log.d(TAG, builder.toString());
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    public void onStepDetected(int sumOfSteps, int accuracy) {
+        // send to mobile
+        sendSensorToMobile(SENSOR_TYPE_STEPS, sumOfSteps);
 
+        // display value
+        StringBuilder builder = new StringBuilder();
+        builder.append("walked:");
+        builder.append(sumOfSteps);
+        mTextView.setText(builder.toString());
+
+        Log.d(TAG, builder.toString());
+    }
+
+    private void sendSensorToMobile(String sensorName, String value) {
+        sendMessage(sensorName + ':' + value);
+    }
+
+    private void sendSensorToMobile(String sensorName, float value) {
+        sendSensorToMobile(sensorName, value+"");
+    }
+
+    private void sendSensorToMobile(String sensorName, int value) {
+        sendSensorToMobile(sensorName, value+"");
     }
 }

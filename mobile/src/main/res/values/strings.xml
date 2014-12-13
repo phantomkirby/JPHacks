@@ -14,4 +14,6 @@
     <string name="content_type_mp4">video/mp4</string>
     <string name="title_activity_video_view_to_tv">VideoViewToTV</string>
 
+    <string name="title_activity_wear_sensor_sample">Sensor Sample</string>
+
 </resources>
