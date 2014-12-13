@@ -1,6 +1,0 @@
-[submodule "library/MPAndroidChart"]
-	path = library/MPAndroidChart
-	url = https://github.com/PhilJay/MPAndroidChart.git
-[submodule "library/HoloGraphLibrary"]
-	path = library/HoloGraphLibrary
-	url = https://github.com/Androguide/HoloGraphLibrary.git
