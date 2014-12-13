@@ -1,6 +1,9 @@
 package im.ene.androooid.jphacks;
 
+import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Typeface;
@@ -72,6 +75,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
      */
     private static final String AUTH_PENDING = "auth_state_pending";
     private static final String[] mMonths = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"};
+
     private static final int LOCATION_INTERVAL = 5000;
     // Internal List of Geofence objects. In a real app, these might be provided by an API based on
     // locations within the user's proximity.
@@ -148,53 +152,38 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
         // enable the drawing of values
         mChart.setDrawYValues(true);
-
         mChart.setDrawValueAboveBar(true);
-
-        mChart.setDescription("");
-
+        mChart.setDescription("YOUR STEPS COUNT");
         // if more than 60 entries are displayed in the chart, no values will be
         // drawn
-        mChart.setMaxVisibleValueCount(12000);
-
+        mChart.setMaxVisibleValueCount(60);
         // disable 3D
         mChart.set3DEnabled(false);
-
         // scaling can now only be done on x- and y-axis separately
         mChart.setPinchZoom(false);
-
         // draw shadows for each bar that show the maximum value
         // mChart.setDrawBarShadow(true);
-
         // mChart.setDrawXLabels(false);
-
         mChart.setDrawGridBackground(false);
         mChart.setDrawHorizontalGrid(true);
         mChart.setDrawVerticalGrid(false);
         // mChart.setDrawYLabels(false);
-
         // sets the text size of the values inside the chart
         mChart.setValueTextSize(10f);
-
         mChart.setDrawBorder(false);
         // mChart.setBorderPositions(new BorderPosition[] {BorderPosition.LEFT,
         // BorderPosition.RIGHT});
-
         Typeface tf = Typeface.createFromAsset(getAssets(), "OpenSans-Regular.ttf");
-
 //        XLabels xl = mChart.getXLabels();
 //        xl.setPosition(XLabels.XLabelPosition.BOTTOM);
 //        xl.setCenterXLabelText(false);
 //        xl.setTypeface(tf);
-
         YLabels yl = mChart.getYLabels();
         yl.setTypeface(tf);
         yl.setLabelCount(8);
         yl.setPosition(YLabels.YLabelPosition.LEFT);
 
         mChart.setValueTypeface(tf);
-
-        setData(3, 100);
 
         /**
          * test timelytextview
@@ -431,6 +420,10 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
     }
 
+    private void setData(DataReadResult dataReadResult) {
+
+    }
+
     private void setData(int count, float range) {
 
         ArrayList<String> xVals = new ArrayList<String>();
@@ -533,6 +526,18 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
     @Override
     public void onResult(DataReadResult dataReadResult) {
+
+        // if any of these occurs, then there is no result
+        if (dataReadResult.getDataSets().size() <= 0 && dataReadResult.getBuckets().size() <= 0)
+            return;
+
+        /**
+         *  from here we set value to the chart;
+         */
+
+        // this is a demo
+        setData(3, 100);
+
         //TODO: for eneim... put these data into the graph however you like...
         //bucket is basically the days, and the most important number is dp.getValue(field)
         //and field = steps in order to get the value of steps in that day.
@@ -576,6 +581,11 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
                 }
             }
         }
+
+        // I prefer we have the value of today
+        // call this with suitable value
+        // showNotificationDialog(this, int1, int2);
+
     }
 
     // Defines the allowable request types (in this example, we only add geofences).
@@ -583,4 +593,44 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         ADD
     }
 
+    // TODO: set action for each situation
+    private void showNotificationDialog(Context context, int todayResult, int averageResult) {
+        if (todayResult > averageResult) {
+            // prositive notification here
+            AlertDialog dialog = new AlertDialog.Builder(context).setMessage("Good Jobs")
+                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    }).create();
+
+            dialog.show();
+
+        } else {
+            // negative notification here
+            // prositive notification here
+            AlertDialog dialog = new AlertDialog.Builder(context).setMessage("Good Jobs")
+                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    }).create();
+
+            dialog.show();
+        }
+    }
 }

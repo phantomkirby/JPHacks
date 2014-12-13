@@ -1,5 +1,8 @@
 package im.ene.androooid.jphacks.utils;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.location.Location;
 import android.location.LocationManager;
 
@@ -25,4 +28,5 @@ public class StringUtils {
     private StringUtils() {
         // no init
     }
+
 }
