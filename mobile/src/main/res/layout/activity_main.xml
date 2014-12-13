@@ -26,12 +26,13 @@
             android:layout_height="match_parent"
             android:background="#CFD8DC">
 
-            <im.ene.androooid.timelytextview.TimelyView
+            <TextView
                 android:id="@+id/text_step_count"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:gravity="center"
+                android:text="text"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textSize="32sp" />
 

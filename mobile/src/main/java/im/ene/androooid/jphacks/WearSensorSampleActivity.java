@@ -1,16 +1,13 @@
 package im.ene.androooid.jphacks;
 
 import android.app.Activity;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 
 import im.ene.androooid.jphacks.callback.WearSensorCallback;
 import im.ene.androooid.jphacks.utils.WearSensorUtil;
 
-
+//KEEP THIS ACTIVITY JUST IN CASE WE NEED TO LOOK AT THE CODE AGAIN.... I PORTED ALL THIS CODE INTO MAINACTIVTY
 public class WearSensorSampleActivity extends Activity implements WearSensorCallback {
     private static final String TAG = "WearSensorSampleActivity";
 

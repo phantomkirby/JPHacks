@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
@@ -43,7 +44,6 @@ import com.google.android.gms.fitness.result.DataReadResult;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.nineoldandroids.animation.ObjectAnimator;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -52,12 +52,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import im.ene.androooid.jphacks.callback.WearSensorCallback;
+import im.ene.androooid.jphacks.utils.WearSensorUtil;
 import im.ene.androooid.jphacks.widgets.SquareGifImageByWidth;
-import im.ene.androooid.timelytextview.TimelyView;
 
 
-public class MainActivity extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnChartValueSelectedListener
+public class MainActivity extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnChartValueSelectedListener, WearSensorCallback
 {
+    //FOR WEAR AND UPDATING THE NUMBER OF STEPS IN BOTTOM LEFT OF ACTIVITY
+    private WearSensorUtil mWearSensorUtil;
+
     //GOOGLE FIT CONSTANT
     private static final int REQUEST_OAUTH = 1;
     /**
@@ -92,14 +96,14 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
     private SquareGifImageByWidth mAvatar;
 
-    private TimelyView mTextStep;
-    private volatile ObjectAnimator objectAnimator = null;
-    private int mCounter = 0;
+    private TextView mTextStep;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mWearSensorUtil = new WearSensorUtil(this);
 
         //TODO: call chathead later
         startService(new Intent(this, ChatHeadService.class));
@@ -192,18 +196,11 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
          * test timelytextview
          */
 
-        mTextStep = (TimelyView) findViewById(R.id.text_step_count);
-
-        mTextStep.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                objectAnimator =  mTextStep.animate(mCounter, ++mCounter);
-                objectAnimator.setDuration(1000);
-            }
-        });
+        mTextStep = (TextView) findViewById(R.id.text_step_count);
+        mTextStep.setText("0");
 
         //TODO: CALL THIS METHOD WHEN USER COMES BACK HOME
-        trackUserComingHome();
+        //trackUserComingHome();
     }
 
     private void trackUserComingHome()
@@ -358,6 +355,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
                         for(Field field : dp.getDataType().getFields()) {
                             Log.i("", "\tFieldLOL: " + field.getName() +
                                     " ValueLOL: " + dp.getValue(field));
+                            //only this one gets called
                         }
                     }
                 }
@@ -378,10 +376,13 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
                     for (Field field : dp.getDataType().getFields()) {
                         Log.i(TAG, "\tField: " + field.getName() +
                                 " Value: " + dp.getValue(field));
+                        //this one does not get called
                     }
                 }
             }
         }
+
+        //CALL DIALOG?
         return null;
     }
 
@@ -392,12 +393,16 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         // Add the callback to start device discovery
         mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
                 MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
+
+        mWearSensorUtil.setCallback(this);
+        mWearSensorUtil.resume();
     }
 
     @Override
     protected void onPause() {
         // Remove the callback to stop device discovery
         mMediaRouter.removeCallback(mMediaRouterCallback);
+        mWearSensorUtil.removeCallback();
         super.onPause();
     }
 
@@ -452,6 +457,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         if (mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
         }
+        mWearSensorUtil.stop();
     }
 
     @Override
@@ -532,5 +538,24 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
             Log.d(TAG, "onRouteUnselected: info=" + info);
             mSelectedDevice = null;
         }
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        mWearSensorUtil.destroy();
+        super.onDestroy();
+    }
+
+    @Override
+    public void onHeartRateChanged(float heartRate)
+    {
+        //do nothing in this implemented method
+        //Log.d(TAG, "heart rate:"+heartRate);
+    }
+    @Override
+    public void onStepDetected(int sumOfSteps) {
+        Log.d(TAG, "steps:"+sumOfSteps);
+        mTextStep.setText(sumOfSteps);
     }
 }
