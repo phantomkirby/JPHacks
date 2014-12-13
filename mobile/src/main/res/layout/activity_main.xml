@@ -26,7 +26,8 @@
             android:layout_height="match_parent"
             android:padding="12dp"
             android:background="@drawable/background_circle"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:id="@+id/">
 
             <TextView
                 android:id="@+id/text_step_count"
@@ -46,10 +47,10 @@
                 android:layout_weight="2"
                 android:layout_gravity="center"
                 android:gravity="center"
-                android:text="STEPS"
-                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                android:text="STEPS TODAY"
+                android:textAppearance="@style/TextAppearance.AppCompat.Title"
                 android:textColor="#3e3639"
-                android:textSize="24sp"/>
+                android:textSize="20sp"/>
 
         </im.ene.androooid.jphacks.widgets.SquareLinearLayoutByHeight>
 

@@ -57,14 +57,15 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     private volatile ObjectAnimator objectAnimator = null;
     private int mCounter = 0;
 
+    private Intent mChatHeadIntent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-        //TODO: call chathead later
-        startService(new Intent(this, ChatHeadService.class));
+        // TODO: call chathead later
+        mChatHeadIntent = new Intent(this, ChatHeadService.class);
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -146,12 +147,14 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     @Override
     protected void onResume() {
         super.onResume();
+        stopService(mChatHeadIntent);
     }
 
     @Override
     protected void onPause() {
         // Remove the callback to stop device discovery
         super.onPause();
+        startService(mChatHeadIntent);
     }
 
     @Override
