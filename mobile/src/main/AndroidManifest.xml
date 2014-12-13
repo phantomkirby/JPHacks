@@ -6,14 +6,13 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
     <uses-feature
         android:name="android.hardware.wifi"
-        android:required="true" >
-    </uses-feature>
-
-    <!--PERMISSSIONs-->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+        android:required="true"></uses-feature>
 
     <application
         android:allowBackup="true"
@@ -29,12 +28,9 @@
             </intent-filter>
         </activity>
 
-<<<<<<< HEAD
-
-=======
         <activity
             android:name=".VideoView"
-            android:label="@string/app_name" >
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -42,8 +38,7 @@
         </activity>
 
         <!--SERVICES-->
-        <service android:name=".ChatHeadService"/>
->>>>>>> upstream/master
+        <service android:name=".ChatHeadService" />
     </application>
 
 </manifest>

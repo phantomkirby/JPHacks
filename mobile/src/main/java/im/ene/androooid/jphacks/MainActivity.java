@@ -1,6 +1,6 @@
 package im.ene.androooid.jphacks;
 
-<<<<<<< HEAD
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
@@ -9,13 +9,6 @@ import android.support.v7.app.MediaRouteActionProvider;
 import android.support.v7.media.MediaRouteSelector;
 import android.support.v7.media.MediaRouter;
 import android.util.Log;
-=======
-import android.support.v7.app.ActionBarActivity;
-
-
-import android.content.Intent;
-import android.os.Bundle;
->>>>>>> upstream/master
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -72,6 +65,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
     private TimelyView mTextStep;
     private volatile ObjectAnimator objectAnimator = null;
+    private int mCounter = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -174,8 +168,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
             }
         });
     }
-
-    private int mCounter = 0;
 
     @Override
     protected void onResume() {
