@@ -1,18 +1,9 @@
 package im.ene.androooid.jphacks;
 
-import android.support.v7.app.ActionBarActivity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.content.SharedPreferences;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.content.Intent;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
@@ -24,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
+
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
@@ -46,7 +38,6 @@ import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
-import com.google.android.gms.fitness.data.Value;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DataReadResult;
 import com.google.android.gms.location.ActivityRecognition;
@@ -54,21 +45,19 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.nineoldandroids.animation.ObjectAnimator;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 import im.ene.androooid.jphacks.widgets.SquareGifImageByWidth;
 import im.ene.androooid.timelytextview.TimelyView;
 
 
 public class MainActivity extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnChartValueSelectedListener
 {
-
-    //KEY FOR PREFERENCE... THIS PREFERENCE STORES THE TIME AS SOON AS USER LEFT HOME
-    private static final String LONG_USER_LEFT_HOME_TIME = "LEFTHOMETIME";
-    SharedPreferences sharedPreferences;
-    public static final String MyPREFERENCES = "MyPrefs" ;
-
     //GOOGLE FIT CONSTANT
     private static final int REQUEST_OAUTH = 1;
     /**
@@ -111,10 +100,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
-        //set up the shared preferences
-        sharedPreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
 
         //TODO: call chathead later
         startService(new Intent(this, ChatHeadService.class));
@@ -217,18 +202,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
             }
         });
 
-        //TODO: CALL THIS METHOD WHEN USER LEAVES HOME
-//        trackUserLeavingHome();
-
         //TODO: CALL THIS METHOD WHEN USER COMES BACK HOME
         trackUserComingHome();
-    }
-
-    private void trackUserLeavingHome()
-    {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putLong(LONG_USER_LEFT_HOME_TIME, System.currentTimeMillis());
-        editor.commit();
     }
 
     private void trackUserComingHome()
@@ -324,7 +299,12 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
     private String retrieveNumberOfStepsAsString()
     {
-        Long userLeftHomeTime = sharedPreferences.getLong(LONG_USER_LEFT_HOME_TIME, 0);
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.WEEK_OF_YEAR, -1);
+        long startTime = cal.getTimeInMillis();
 
         //original
 //        DataReadRequest readRequest = new DataReadRequest.Builder()
@@ -347,8 +327,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
                         .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
                         .bucketByTime(1, TimeUnit.DAYS)
                                 //userLeftHomeTime = startTime, current system time = end time
-                                //TODO: change the -3600000
-                        .setTimeRange(System.currentTimeMillis() - 3600000, System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                        .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
                         .build());
 
         //original
@@ -358,56 +337,52 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         DataReadResult dataReadResult = pendingResult.await();
 
 
+        //TODO: for eneim... put these data into the graph however you like...
+        //bucket is basically the days, and the most important number is dp.getValue(field)
+        //and field = steps in order to get the value of steps in that day.
         if (dataReadResult.getBuckets().size() > 0)
         {
             Log.i(TAG, "Number of returned buckets of DataSets is: "
                     + dataReadResult.getBuckets().size());
-            Bucket bucket = dataReadResult.getBuckets().get(0);
-            List<DataSet> dataSets = bucket.getDataSets();
-            DataPoint dp = dataSets.get(0).getDataPoints().get(0);
-            Value value = dp.getValue(Field.FIELD_STEPS);
-            return value.toString();
-//            for (Bucket bucket : dataReadResult.getBuckets()) {
-//                List<DataSet> dataSets = bucket.getDataSets();
-//                for (DataSet dataSet : dataSets) {
-//                    Log.i(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
-//                    SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss");
-//
-//                    for (DataPoint dp : dataSet.getDataPoints()) {
-//                        Log.i(TAG, "Data point:");
-//                        Log.i(TAG, "\tType: " + dp.getDataType().getName());
-//                        Log.i(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-//                        Log.i(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
-//                        for(Field field : dp.getDataType().getFields()) {
-//                            Log.i(TAG, "\tField: " + field.getName() +
-//                                    " Value: " + dp.getValue(field));
-//                        }
-//                    }
-//                }
-//            }
-        } else
-        {
-            return null;
+            for (Bucket bucket : dataReadResult.getBuckets()) {
+                List<DataSet> dataSets = bucket.getDataSets();
+                for (DataSet dataSet : dataSets) {
+                    Log.i("", "Data returned for Data type: " + dataSet.getDataType().getName());
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/M/yyyy hh:mm:ss");
+
+                    for (DataPoint dp : dataSet.getDataPoints()) {
+                        Log.i("", "Data pointLOL:");
+                        Log.i("", "\tTypeLOL: " + dp.getDataType().getName());
+                        Log.i("", "\tStartLOL: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+                        Log.i("", "\tEndLOL: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
+                        for(Field field : dp.getDataType().getFields()) {
+                            Log.i("", "\tFieldLOL: " + field.getName() +
+                                    " ValueLOL: " + dp.getValue(field));
+                        }
+                    }
+                }
+            }
         }
-//        else if (dataReadResult.getDataSets().size() > 0) {
-//            Log.i(TAG, "Number of returned DataSets is: "
-//                    + dataReadResult.getDataSets().size());
-//            for (DataSet dataSet : dataReadResult.getDataSets()) {
-//                Log.i(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
-//                SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss");
-//
-//                for (DataPoint dp : dataSet.getDataPoints()) {
-//                    Log.i(TAG, "Data point:");
-//                    Log.i(TAG, "\tType: " + dp.getDataType().getName());
-//                    Log.i(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-//                    Log.i(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
-//                    for (Field field : dp.getDataType().getFields()) {
-//                        Log.i(TAG, "\tField: " + field.getName() +
-//                                " Value: " + dp.getValue(field));
-//                    }
-//                }
-//            }
-//        }
+        else if (dataReadResult.getDataSets().size() > 0) {
+            Log.i(TAG, "Number of returned DataSets is: "
+                    + dataReadResult.getDataSets().size());
+            for (DataSet dataSet : dataReadResult.getDataSets()) {
+                Log.i(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+                SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss");
+
+                for (DataPoint dp : dataSet.getDataPoints()) {
+                    Log.i(TAG, "Data point:");
+                    Log.i(TAG, "\tType: " + dp.getDataType().getName());
+                    Log.i(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+                    Log.i(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
+                    for (Field field : dp.getDataType().getFields()) {
+                        Log.i(TAG, "\tField: " + field.getName() +
+                                " Value: " + dp.getValue(field));
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     @Override

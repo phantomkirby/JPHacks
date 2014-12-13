@@ -8,10 +8,11 @@ import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerView;
 
 /**
- * Created by Cherry_Zhang on 2014-12-13.
+ * Activity is called if user only wants video on phone
  */
 public class VideoView extends YouTubeBaseActivity implements YouTubePlayer.OnInitializedListener
 {
+
     private final String APIKEY = "AIzaSyBMP9t4pFD0xtux5nSnQBXwMRRqdEOE2CY";
 
     YouTubePlayerView youTubePlayerView;
