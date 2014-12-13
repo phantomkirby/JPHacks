@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Typeface;
 import android.location.Location;
+import android.media.AudioTrack;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.media.MediaRouteSelector;
@@ -26,6 +27,7 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.interfaces.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.YLabels;
 import com.google.android.gms.cast.CastDevice;
+import com.google.android.gms.cast.CastMediaControlIntent;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.Scopes;
@@ -55,16 +57,22 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import im.ene.androooid.jphacks.callback.WearSensorCallback;
+import im.ene.androooid.jphacks.model.SimpleGeofence;
+import im.ene.androooid.jphacks.model.SimpleGeofenceStore;
+import im.ene.androooid.jphacks.service.ChatHeadService;
+import im.ene.androooid.jphacks.service.GeofenceTransitionsIntentService;
 import im.ene.androooid.jphacks.utils.StringUtils;
+import im.ene.androooid.jphacks.utils.TextToSpeechTask;
 import im.ene.androooid.jphacks.utils.WearSensorUtil;
 import im.ene.androooid.jphacks.widgets.SquareGifImageByWidth;
+import jp.ne.docomo.smt.dev.common.http.AuthApiKey;
 
-import static im.ene.androooid.jphacks.Constants.CONNECTION_FAILURE_RESOLUTION_REQUEST;
-import static im.ene.androooid.jphacks.Constants.GEOFENCE_EXPIRATION_TIME;
-import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_ID;
-import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_LATITUDE;
-import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_LONGITUDE;
-import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_RADIUS_METERS;
+import static im.ene.androooid.jphacks.utils.Constants.CONNECTION_FAILURE_RESOLUTION_REQUEST;
+import static im.ene.androooid.jphacks.utils.Constants.GEOFENCE_EXPIRATION_TIME;
+import static im.ene.androooid.jphacks.utils.Constants.TODAI_BUILDING_ID;
+import static im.ene.androooid.jphacks.utils.Constants.TODAI_BUILDING_LATITUDE;
+import static im.ene.androooid.jphacks.utils.Constants.TODAI_BUILDING_LONGITUDE;
+import static im.ene.androooid.jphacks.utils.Constants.TODAI_BUILDING_RADIUS_METERS;
 
 
 public class MainActivity extends ActionBarActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnChartValueSelectedListener, ResultCallback<DataReadResult>, WearSensorCallback {
@@ -127,6 +135,8 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        AuthApiKey.initializeAuth(StringUtils.DOCOMO_API_KEY);
+
         // Rather than displayng this activity, simply display a toast indicating that the geofence
         // service is being created. This should happen in less than a second.
         if (!isGooglePlayServicesAvailable()) {
@@ -135,12 +145,13 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             return;
         }
 
+
         // TODO: call chathead later
         mChatHeadIntent = new Intent(this, ChatHeadService.class);
         mWearSensorUtil = new WearSensorUtil(this);
 
-        //TODO: call chathead later
-        startService(new Intent(this, ChatHeadService.class));
+//        //TODO: call chathead later
+//        startService(new Intent(this, ChatHeadService.class));
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -150,6 +161,20 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
+
+        if (savedInstanceState != null) {
+            authInProgress = savedInstanceState.getBoolean(AUTH_PENDING);
+        }
+
+        mMediaRouter = MediaRouter.getInstance(getApplicationContext());
+        // Create a MediaRouteSelector for the type of routes your app supports
+        mMediaRouteSelector = new MediaRouteSelector.Builder()
+                .addControlCategory(
+                        CastMediaControlIntent.categoryForCast(getResources()
+                                .getString(R.string.app_id))).build();
+        // Create a MediaRouter callback for discovery events
+        mMediaRouterCallback = new MyMediaRouterCallback();
+
 
         // Instantiate a new geofence storage area.
         mGeofenceStorage = new SimpleGeofenceStore(this);
@@ -423,7 +448,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
     @Override
     public void onConnected(Bundle bundle) {
-
+        new TextToSpeechTask("せつぞくできました").execute();
 //        new RetrieveData().execute();
 
         mLocationRequest = LocationRequest.create();
@@ -748,5 +773,27 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     // Defines the allowable request types (in this example, we only add geofences).
     private enum REQUEST_TYPE {
         ADD
+    }
+
+    private class MyMediaRouterCallback extends MediaRouter.Callback {
+
+        @Override
+        public void onRouteSelected(MediaRouter router, MediaRouter.RouteInfo info) {
+            Log.d(TAG, "onRouteSelected");
+            // Handle route selection.
+            mSelectedDevice = CastDevice.getFromBundle(info.getExtras());
+
+            // Just display a message for now; In a real app this would be the
+            // hook  to connect to the selected device and launch the receiver
+            // app
+            Toast.makeText(MainActivity.this,
+                    "TODO: Connect", Toast.LENGTH_LONG).show();
+        }
+
+        @Override
+        public void onRouteUnselected(MediaRouter router, MediaRouter.RouteInfo info) {
+            Log.d(TAG, "onRouteUnselected: info=" + info);
+            mSelectedDevice = null;
+        }
     }
 }

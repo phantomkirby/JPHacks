@@ -1,4 +1,4 @@
-package im.ene.androooid.jphacks;
+package im.ene.androooid.jphacks.service;
 
 import android.app.Service;
 import android.content.Intent;
@@ -9,6 +9,8 @@ import android.widget.ImageView;
 
 import com.premnirmal.Magnet.IconCallback;
 import com.premnirmal.Magnet.Magnet;
+
+import im.ene.androooid.jphacks.R;
 
 /**
  * Created by Cherry_Zhang on 2014-12-13.

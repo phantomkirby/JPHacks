@@ -37,7 +37,7 @@
         </activity>
 
         <!--SERVICES-->
-        <service android:name=".ChatHeadService" />
+        <service android:name=".service.ChatHeadService" />
     </application>
 
 </manifest>
