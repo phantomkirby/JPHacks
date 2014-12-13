@@ -13,7 +13,9 @@
         android:src="@drawable/phone_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/imageView"/>
+        android:id="@+id/imageView"
+        android:layout_below="@+id/heartRate"
+        android:layout_centerHorizontal="true"/>
 
     <Button
         android:id="@+id/button"
@@ -23,5 +25,10 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/imageView"
         android:layout_centerHorizontal="true"/>
+
+    <TextView
+        android:id="@+id/heartRate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
 </RelativeLayout>
