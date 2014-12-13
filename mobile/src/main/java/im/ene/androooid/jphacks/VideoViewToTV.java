@@ -45,7 +45,7 @@ public class VideoViewToTV extends ActionBarActivity {
     @Override
     protected void onCreate( Bundle savedInstanceState ) {
         super.onCreate( savedInstanceState );
-        setContentView( R.layout.activity_main );
+        setContentView( R.layout.activity_video_view_to_tv );
 
         mButton = (Button) findViewById( R.id.button );
         mButton.setOnClickListener( new View.OnClickListener() {
