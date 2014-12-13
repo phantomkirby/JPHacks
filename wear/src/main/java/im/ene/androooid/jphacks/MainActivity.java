@@ -8,10 +8,14 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.wearable.view.WatchViewStub;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity implements SensorEventListener {
     private TextView mTextView;
+    private ImageView mImageViewHeart;
 
     private SensorManager mSensorManager;
     private Sensor mHeartRateSensor;
@@ -29,6 +33,10 @@ public class MainActivity extends Activity implements SensorEventListener {
             @Override
             public void onLayoutInflated(WatchViewStub stub) {
                 mTextView = (TextView) stub.findViewById(R.id.text);
+                mImageViewHeart = (ImageView) stub.findViewById(R.id.imgHeart);
+
+                Animation heartFlashAnimation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.heart_flash);
+                mImageViewHeart.startAnimation(heartFlashAnimation);
             }
         });
 
@@ -63,6 +71,8 @@ public class MainActivity extends Activity implements SensorEventListener {
         builder.append("heart rate:");
         builder.append(event.values[0]);
         mTextView.setText(builder.toString());
+
+        // TODO: change animation speed according to the heart rate
     }
 
     @Override
