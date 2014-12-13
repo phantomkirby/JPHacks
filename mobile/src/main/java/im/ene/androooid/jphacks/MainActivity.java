@@ -556,6 +556,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     @Override
     public void onStepDetected(int sumOfSteps) {
         Log.d(TAG, "steps:"+sumOfSteps);
-        mTextStep.setText(sumOfSteps);
+        mTextStep.setText(sumOfSteps + "");
     }
 }
