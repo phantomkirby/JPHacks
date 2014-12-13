@@ -105,6 +105,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
                 Toast.makeText(MainActivity.this, "clicked", Toast.LENGTH_SHORT).show();
             }
         });
+
         // chart
         mChart = (BarChart) findViewById(R.id.chart_steps_count_week);
         mChart.setOnChartValueSelectedListener(this);
