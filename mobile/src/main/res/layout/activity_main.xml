@@ -27,7 +27,7 @@
             android:padding="12dp"
             android:background="@drawable/background_circle"
             android:orientation="vertical"
-            android:id="@+id/">
+            android:id="@+id/image_avatar">
 
             <TextView
                 android:id="@+id/text_step_count"

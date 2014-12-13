@@ -1,6 +1,7 @@
 package im.ene.androooid.jphacks.utils;
 
 import android.location.Location;
+import android.location.LocationManager;
 
 /**
  * Created by eneim on 12/13/14.
@@ -17,7 +18,7 @@ public class StringUtils {
     public static final Location TEST_LOCATION;
 
     static {
-        TEST_LOCATION = new Location("") ;
+        TEST_LOCATION = new Location(LocationManager.GPS_PROVIDER) ;
         TEST_LOCATION.setLatitude(35.712944);
         TEST_LOCATION.setLongitude(139.762010);
     }
