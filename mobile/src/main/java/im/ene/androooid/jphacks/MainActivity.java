@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Typeface;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -22,7 +23,19 @@ import com.github.mikephil.charting.interfaces.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.YLabels;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.data.Bucket;
+import com.google.android.gms.fitness.data.DataPoint;
+import com.google.android.gms.fitness.data.DataSet;
+import com.google.android.gms.fitness.data.DataType;
+import com.google.android.gms.fitness.data.Field;
+import com.google.android.gms.fitness.request.DataReadRequest;
+import com.google.android.gms.fitness.result.DataReadResult;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.LocationListener;
@@ -30,43 +43,46 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.nineoldandroids.animation.ObjectAnimator;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import im.ene.androooid.jphacks.utils.StringUtils;
 import im.ene.androooid.jphacks.widgets.SquareGifImageByWidth;
 
-import static im.ene.androooid.jphacks.Constants.ANDROID_BUILDING_ID;
-import static im.ene.androooid.jphacks.Constants.ANDROID_BUILDING_LATITUDE;
-import static im.ene.androooid.jphacks.Constants.ANDROID_BUILDING_LONGITUDE;
-import static im.ene.androooid.jphacks.Constants.ANDROID_BUILDING_RADIUS_METERS;
 import static im.ene.androooid.jphacks.Constants.CONNECTION_FAILURE_RESOLUTION_REQUEST;
 import static im.ene.androooid.jphacks.Constants.GEOFENCE_EXPIRATION_TIME;
 import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_ID;
 import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_LATITUDE;
 import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_LONGITUDE;
 import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_RADIUS_METERS;
-import static im.ene.androooid.jphacks.Constants.YERBA_BUENA_ID;
-import static im.ene.androooid.jphacks.Constants.YERBA_BUENA_LATITUDE;
-import static im.ene.androooid.jphacks.Constants.YERBA_BUENA_LONGITUDE;
-import static im.ene.androooid.jphacks.Constants.YERBA_BUENA_RADIUS_METERS;
 
 
-public class MainActivity extends ActionBarActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnChartValueSelectedListener {
-
+public class MainActivity extends ActionBarActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnChartValueSelectedListener, ResultCallback<DataReadResult> {
     public static final String TAG = MainActivity.class.getCanonicalName();
+    //GOOGLE FIT CONSTANT
+    private static final int REQUEST_OAUTH = 1;
+    /**
+     * Track whether an authorization activity is stacking over the current activity, i.e. when
+     * a known auth error is being resolved, such as showing the account chooser or presenting a
+     * consent dialog. This avoids common duplications as might happen on screen rotations, etc.
+     */
+    private static final String AUTH_PENDING = "auth_state_pending";
     private static final String[] mMonths = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"};
-
     private static final int LOCATION_INTERVAL = 5000;
     // Internal List of Geofence objects. In a real app, these might be provided by an API based on
     // locations within the user's proximity.
     List<Geofence> mGeofenceList;
+    private boolean authInProgress = false;
     /**
      * Google Api Client stuffs defined here
      */
     private GoogleApiClient mGoogleApiClient;
-    private LocationRequest mLocationRequester;
-    ;
+    private LocationRequest mLocationRequest;
+    private DataReadRequest mDataReadRequest;
     private Location mLastLocation = StringUtils.TEST_LOCATION;
     // These will store hard-coded geofences in this sample app.
 //    private SimpleGeofence mAndroidBuildingGeofence;
@@ -109,6 +125,8 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .addApi(ActivityRecognition.API)
+                .addApi(Fitness.API)
+                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
@@ -191,6 +209,93 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     protected void onStart() {
         super.onStart();
         mGoogleApiClient.connect();
+
+//        mTextStep = (TimelyView) findViewById(R.id.text_step_count);
+//
+//        mTextStep.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                objectAnimator =  mTextStep.animate(mCounter, ++mCounter);
+//                objectAnimator.setDuration(1000);
+//            }
+//        });
+
+        //TODO: CALL THIS METHOD WHEN USER COMES BACK HOME
+
+        // FIXME (eneim): the app will automatically call necessary stuff by Callbacks
+//        trackUserComingHome();
+    }
+
+    private void trackUserComingHome() {
+        buildFitnessClient();
+    }
+
+    /**
+     * Build a {@link GoogleApiClient} that will authenticate the user and allow the application
+     * to connect to Fitness APIs. The scopes included should match the scopes your app needs
+     * (see documentation for details). Authentication will occasionally fail intentionally,
+     * and in those cases, there will be a known resolution, which the OnConnectionFailedListener()
+     * can address. Examples of this include the user never having signed in before, or having
+     * multiple accounts on the device and needing to specify which account to use, etc.
+     */
+    private void buildFitnessClient() {
+        // Create the Google API Client
+//        mGoogleApiClient = new GoogleApiClient.Builder(this)
+//                .addApi(Fitness.API)
+//                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
+//                .addConnectionCallbacks(
+//                        new GoogleApiClient.ConnectionCallbacks() {
+//
+//                            @Override
+//                            public void onConnected(Bundle bundle) {
+//                                Log.i(TAG, "Connected!!!");
+//                                // Now you can make calls to the Fitness APIs.
+//                                // Put application specific code here.
+//                                new RetrieveData().execute();
+//                            }
+//
+//                            @Override
+//                            public void onConnectionSuspended(int i) {
+//                                // If your connection to the sensor gets lost at some point,
+//                                // you'll be able to determine the reason and react to it here.
+//                                if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
+//                                    Log.i(TAG, "Connection lost.  Cause: Network Lost.");
+//                                } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
+//                                    Log.i(TAG, "Connection lost.  Reason: Service Disconnected");
+//                                }
+//                            }
+//                        }
+//                )
+//                .addOnConnectionFailedListener(
+//                        new GoogleApiClient.OnConnectionFailedListener() {
+//                            // Called whenever the API client fails to connect.
+//                            @Override
+//                            public void onConnectionFailed(ConnectionResult result) {
+//                                Log.i(TAG, "Connection failed. Cause: " + result.toString());
+//                                if (!result.hasResolution()) {
+//                                    // Show the localized error dialog
+//                                    GooglePlayServicesUtil.getErrorDialog(result.getErrorCode(),
+//                                            MainActivity.this, 0).show();
+//                                    return;
+//                                }
+//                                // The failure has a resolution. Resolve it.
+//                                // Called typically when the app is not yet authorized, and an
+//                                // authorization dialog is displayed to the user.
+//                                if (!authInProgress) {
+//                                    try {
+//                                        Log.i(TAG, "Attempting to resolve failed connection");
+//                                        authInProgress = true;
+//                                        result.startResolutionForResult(MainActivity.this,
+//                                                REQUEST_OAUTH);
+//                                    } catch (IntentSender.SendIntentException e) {
+//                                        Log.e(TAG,
+//                                                "Exception while starting resolution activity", e);
+//                                    }
+//                                }
+//                            }
+//                        }
+//                )
+//                .build();
     }
 
     @Override
@@ -233,15 +338,17 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     @Override
     public void onConnected(Bundle bundle) {
 
-        mLocationRequester = LocationRequest.create();
-        mLocationRequester.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequester.setInterval(LOCATION_INTERVAL); // Update location every second
+//        new RetrieveData().execute();
+
+        mLocationRequest = LocationRequest.create();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(LOCATION_INTERVAL); // Update location every second
 
         LocationServices.FusedLocationApi.setMockMode(mGoogleApiClient, true);
         LocationServices.FusedLocationApi.setMockLocation(mGoogleApiClient, StringUtils.TEST_LOCATION);
 
         LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequester, this);
+                mGoogleApiClient, mLocationRequest, this);
 
         // Get the PendingIntent for the geofence monitoring request.
         // Send a request to add the current geofences.
@@ -249,10 +356,33 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, mGeofenceList,
                 mGeofenceRequestIntent);
         Toast.makeText(this, getString(R.string.start_geofence_service), Toast.LENGTH_SHORT).show();
+
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        long endTime = cal.getTimeInMillis();
+        cal.add(Calendar.WEEK_OF_YEAR, -1);
+        long startTime = cal.getTimeInMillis();
+
+        mDataReadRequest = new DataReadRequest.Builder()
+                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .bucketByTime(1, TimeUnit.DAYS)
+                        //userLeftHomeTime = startTime, current system time = end time
+                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+                .build();
+
+        Fitness.HistoryApi.readData(mGoogleApiClient, mDataReadRequest).setResultCallback(this);
+
     }
 
     @Override
     public void onConnectionSuspended(int i) {
+        if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
+            Log.i(TAG, "Connection lost.  Cause: Network Lost.");
+        } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
+            Log.i(TAG, "Connection lost.  Reason: Service Disconnected");
+        }
+
         if (null != mGeofenceRequestIntent) {
             LocationServices.GeofencingApi.removeGeofences(mGoogleApiClient, mGeofenceRequestIntent);
         }
@@ -260,18 +390,35 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-// If the error has a resolution, start a Google Play services activity to resolve it.
-        if (connectionResult.hasResolution()) {
+
+        if (!connectionResult.hasResolution()) {
+            // Show the localized error dialog
+            GooglePlayServicesUtil.getErrorDialog(connectionResult.getErrorCode(),
+                    MainActivity.this, 0).show();
+            return;
+        } else {
             try {
                 connectionResult.startResolutionForResult(this,
                         CONNECTION_FAILURE_RESOLUTION_REQUEST);
             } catch (IntentSender.SendIntentException e) {
                 Log.e(TAG, "Exception while resolving connection error.", e);
             }
-        } else {
-            int errorCode = connectionResult.getErrorCode();
-            Log.e(TAG, "Connection to Google Play services failed with error code " + errorCode);
         }
+        // The failure has a resolution. Resolve it.
+        // Called typically when the app is not yet authorized, and an
+        // authorization dialog is displayed to the user.
+        if (!authInProgress) {
+            try {
+                Log.i(TAG, "Attempting to resolve failed connection");
+                authInProgress = true;
+                connectionResult.startResolutionForResult(MainActivity.this,
+                        REQUEST_OAUTH);
+            } catch (IntentSender.SendIntentException e) {
+                Log.e(TAG,
+                        "Exception while starting resolution activity", e);
+            }
+        }
+
     }
 
     @Override
@@ -384,8 +531,56 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
+    @Override
+    public void onResult(DataReadResult dataReadResult) {
+        //TODO: for eneim... put these data into the graph however you like...
+        //bucket is basically the days, and the most important number is dp.getValue(field)
+        //and field = steps in order to get the value of steps in that day.
+        if (dataReadResult.getBuckets().size() > 0) {
+            Log.i(TAG, "Number of returned buckets of DataSets is: "
+                    + dataReadResult.getBuckets().size());
+            for (Bucket bucket : dataReadResult.getBuckets()) {
+                List<DataSet> dataSets = bucket.getDataSets();
+                for (DataSet dataSet : dataSets) {
+                    Log.i("", "Data returned for Data type: " + dataSet.getDataType().getName());
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/M/yyyy hh:mm:ss");
+
+                    for (DataPoint dp : dataSet.getDataPoints()) {
+                        Log.i("", "Data pointLOL:");
+                        Log.i("", "\tTypeLOL: " + dp.getDataType().getName());
+                        Log.i("", "\tStartLOL: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+                        Log.i("", "\tEndLOL: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
+                        for (Field field : dp.getDataType().getFields()) {
+                            Log.i("", "\tFieldLOL: " + field.getName() +
+                                    " ValueLOL: " + dp.getValue(field));
+                        }
+                    }
+                }
+            }
+        } else if (dataReadResult.getDataSets().size() > 0) {
+            Log.i(TAG, "Number of returned DataSets is: "
+                    + dataReadResult.getDataSets().size());
+            for (DataSet dataSet : dataReadResult.getDataSets()) {
+                Log.i(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+                SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss");
+
+                for (DataPoint dp : dataSet.getDataPoints()) {
+                    Log.i(TAG, "Data point:");
+                    Log.i(TAG, "\tType: " + dp.getDataType().getName());
+                    Log.i(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+                    Log.i(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
+                    for (Field field : dp.getDataType().getFields()) {
+                        Log.i(TAG, "\tField: " + field.getName() +
+                                " Value: " + dp.getValue(field));
+                    }
+                }
+            }
+        }
+    }
+
     // Defines the allowable request types (in this example, we only add geofences).
     private enum REQUEST_TYPE {
         ADD
     }
+
 }
