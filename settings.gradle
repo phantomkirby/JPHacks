@@ -1,3 +1,1 @@
-include ':mobile', ':tv', ':wear', ':MPChartLib', ':HoloGraphLibrary'
-project(':MPChartLib').projectDir = new File('library/MPAndroidChart/MPChartLib')
-project(':HoloGraphLibrary').projectDir = new File('library/HoloGraphLibrary/HoloGraphLibrary')
+include ':mobile', ':tv', ':wear'
