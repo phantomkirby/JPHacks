@@ -4,6 +4,7 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import jp.ne.docomo.smt.dev.aitalk.AiTalkTextToSpeech;
 import jp.ne.docomo.smt.dev.aitalk.data.AiTalkSsml;
@@ -14,14 +15,12 @@ import jp.ne.docomo.smt.dev.aitalk.data.AiTalkSsml;
 public class TextToSpeechTask extends AsyncTask<Void, Void, byte[]> {
 
     private final String source;
-    private final TextToSpeechCallback mCallback;
     private AiTalkTextToSpeech search;
 
-    public TextToSpeechTask(String string, TextToSpeechCallback callback) {
+    public TextToSpeechTask(String string) {
         super();
         this.source = string;
         this.search = new AiTalkTextToSpeech();
-        this.mCallback = callback;
     }
 
     @Override
@@ -33,7 +32,26 @@ public class TextToSpeechTask extends AsyncTask<Void, Void, byte[]> {
             ssml.addText(this.source);
             ssml.endVoice();
 
-            return search.requestAiTalkSsmlToSound(ssml.makeSsml());
+            byte[] data = search.requestAiTalkSsmlToSound(ssml.makeSsml());
+
+            Log.d("AITalk API", "" + data.length);
+
+            int bufSize = AudioTrack.getMinBufferSize(16000, AudioFormat.CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT);
+            // ビッグエディアンをリトルエディアンに変換
+            search.convertByteOrder16(data);
+            // 音声出力
+            AudioTrack at = new AudioTrack(AudioManager.STREAM_MUSIC, 16000, AudioFormat.CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT, bufSize, AudioTrack.MODE_STREAM);
+
+            at.play();
+            at.write(data, 0, data.length);
+            // 音声出力待ち
+            try {
+                Thread.sleep(data.length / 32);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            return data;
         } catch (Exception er) {
             er.printStackTrace();
             return new byte[0];
@@ -42,21 +60,6 @@ public class TextToSpeechTask extends AsyncTask<Void, Void, byte[]> {
 
     @Override
     protected void onPostExecute(byte[] bytes) {
-        if (bytes == null || bytes.length == 0)
-            return;
-
-        // 音声出力用バッファ作成
-        int bufSize = AudioTrack.getMinBufferSize(16000, AudioFormat.CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT);
-        // ビッグエディアンをリトルエディアンに変換
-        search.convertByteOrder16(bytes);
-        // 音声出力
-        AudioTrack at = new AudioTrack(AudioManager.STREAM_MUSIC, 16000, AudioFormat.CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT, bufSize, AudioTrack.MODE_STREAM);
-
-        if (mCallback != null)
-            mCallback.onAudioCallback(at);
-    }
-
-    public interface TextToSpeechCallback {
-        void onAudioCallback(AudioTrack track);
+        return;
     }
 }
