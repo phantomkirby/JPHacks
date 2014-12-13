@@ -1,15 +1,19 @@
 package im.ene.androooid.jphacks;
 
+import android.app.Dialog;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.MediaRouteActionProvider;
 import android.support.v7.media.MediaRouteSelector;
 import android.support.v7.media.MediaRouter;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.cast.ApplicationMetadata;
 import com.google.android.gms.cast.Cast;
@@ -25,10 +29,27 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 
 import java.io.IOException;
+import java.util.Random;
 
-public class VideoViewToTV extends ActionBarActivity {
+import im.ene.androooid.jphacks.callback.WearSensorCallback;
+import im.ene.androooid.jphacks.utils.WearSensorUtil;
+
+public class VideoViewToTV extends ActionBarActivity implements WearSensorCallback
+{
+    private static String videoToLoad;
+    private static final String[] hardVideos =
+            {"https://www.youtube.com/watch?v=QtYgmDEddug",
+             "https://www.youtube.com/watch?v=52uvwCi03yE",
+             "https://www.youtube.com/watch?v=ZJ8Zdj0OPMI"};
+    private static final String easyVideo = "https://www.youtube.com/watch?v=q5nyrD4eM64";
+    Random r;
+    final int Low = 0;
+    final int High = 2;
+
+    private WearSensorUtil mWearSensorUtil;
 
     private Button mButton;
+    private TextView tv_heartRate;
 
     private MediaRouter mMediaRouter;
     private MediaRouteSelector mMediaRouteSelector;
@@ -47,6 +68,8 @@ public class VideoViewToTV extends ActionBarActivity {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_video_view_to_tv );
 
+        tv_heartRate = (TextView) findViewById(R.id.heartRate);
+
         mButton = (Button) findViewById( R.id.button );
         mButton.setOnClickListener( new View.OnClickListener() {
             @Override
@@ -58,6 +81,10 @@ public class VideoViewToTV extends ActionBarActivity {
             }
         });
 
+        r = new Random();
+
+        mWearSensorUtil = new WearSensorUtil(this);
+
         initMediaRouter();
     }
 
@@ -65,7 +92,7 @@ public class VideoViewToTV extends ActionBarActivity {
         // Configure Cast device discovery
         mMediaRouter = MediaRouter.getInstance( getApplicationContext() );
         mMediaRouteSelector = new MediaRouteSelector.Builder()
-                .addControlCategory( CastMediaControlIntent.categoryForCast(CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID) )
+                .addControlCategory( CastMediaControlIntent.categoryForCast(getString(R.string.app_id)) )
                 .build();
         mMediaRouterCallback = new MediaRouterCallback();
     }
@@ -121,7 +148,14 @@ public class VideoViewToTV extends ActionBarActivity {
         MediaMetadata mediaMetadata = new MediaMetadata( MediaMetadata.MEDIA_TYPE_MOVIE );
         mediaMetadata.putString( MediaMetadata.KEY_TITLE, getString( R.string.video_title ) );
 
-        MediaInfo mediaInfo = new MediaInfo.Builder( getString( R.string.video_url ) )
+        if (videoToLoad == null)
+        {
+            Toast.makeText(this, "initializing video", Toast.LENGTH_SHORT).show();
+            videoToLoad = "https://www.youtube.com/watch?v=NUieo6Mc9EA";
+        }
+
+        //getString(R.string.video_url)
+        MediaInfo mediaInfo = new MediaInfo.Builder(videoToLoad)
                 .setContentType( getString( R.string.content_type_mp4 ) )
                 .setStreamType( MediaInfo.STREAM_TYPE_BUFFERED )
                 .setMetadata( mediaMetadata )
@@ -146,6 +180,9 @@ public class VideoViewToTV extends ActionBarActivity {
         super.onResume();
         // Start media router discovery
         mMediaRouter.addCallback( mMediaRouteSelector, mMediaRouterCallback, MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN );
+
+        mWearSensorUtil.setCallback(this);
+        mWearSensorUtil.resume();
     }
 
     @Override
@@ -154,6 +191,7 @@ public class VideoViewToTV extends ActionBarActivity {
             // End media router discovery
             mMediaRouter.removeCallback( mMediaRouterCallback );
         }
+        mWearSensorUtil.removeCallback();
         super.onPause();
     }
 
@@ -202,7 +240,7 @@ public class VideoViewToTV extends ActionBarActivity {
                 reconnectChannels( hint );
             } else {
                 try {
-                    Cast.CastApi.launchApplication( mApiClient,CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID , false )
+                    Cast.CastApi.launchApplication( mApiClient, getString( R.string.app_id ), false )
                             .setResultCallback( new ResultCallback<Cast.ApplicationConnectionResult>() {
                                                     @Override
                                                     public void onResult(Cast.ApplicationConnectionResult applicationConnectionResult) {
@@ -287,11 +325,96 @@ public class VideoViewToTV extends ActionBarActivity {
         mVideoIsLoaded = false;
     }
 
+    @Override
+    protected void onStop() {
+        mWearSensorUtil.stop();
+        super.onStop();
+    }
 
     @Override
     public void onDestroy() {
         teardown();
+        mWearSensorUtil.destroy();
         super.onDestroy();
+    }
+
+    @Override
+    public void onHeartRateChanged(float heartRate) {
+        Log.d("", "heart rate:" + heartRate);
+        tv_heartRate.setText(Float.toString(heartRate));
+        if (heartRate > 100) //TODO: change this number to be more suitable
+        {
+            final Dialog dialog = new Dialog(this);
+            dialog.setTitle("We Noticed You have Heartrate > 100...");
+            dialog.setContentView(R.layout.load_new_video_dialog);
+
+            TextView textView = (TextView) dialog.findViewById(R.id.show_easy_or_hard_video_textView);
+            textView.setText("Want to show easier video?");
+
+            Button confirmButton = (Button) dialog.findViewById(R.id.confirm);
+            confirmButton.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    // use easyvideo
+                    videoToLoad = easyVideo;
+                    dialog.dismiss();
+                    recreate();
+                }
+            });
+            Button declineButton = (Button) dialog.findViewById(R.id.decline);
+            declineButton.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    dialog.dismiss();
+                }
+            });
+            dialog.show();
+        }
+        else if (heartRate < 80) //TODO: change this number to be more suitable
+        {
+
+            final Dialog dialog = new Dialog(this);
+            dialog.setTitle("We Noticed You have Heartrate < 80...");
+            dialog.setContentView(R.layout.load_new_video_dialog);
+
+            TextView textView = (TextView) dialog.findViewById(R.id.show_easy_or_hard_video_textView);
+            textView.setText("Want to show harder video?");
+
+            Button confirmButton = (Button) dialog.findViewById(R.id.confirm);
+            confirmButton.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    //show one of the harder videos
+                    int randomIndex = r.nextInt(High-Low) + Low;
+                    videoToLoad = hardVideos[randomIndex];
+                    dialog.dismiss();
+                    recreate();
+                }
+            });
+            Button declineButton = (Button) dialog.findViewById(R.id.decline);
+            declineButton.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    dialog.dismiss();
+                }
+            });
+            dialog.show();
+        }
+
+        // else don't do anything
+    }
+
+    @Override
+    public void onStepDetected(int sumOfSteps) {
+        //Log.d("", "steps:"+sumOfSteps);
     }
 
 }

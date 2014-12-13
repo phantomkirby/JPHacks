@@ -24,17 +24,32 @@
         <im.ene.androooid.jphacks.widgets.SquareLinearLayoutByHeight
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:background="#CFD8DC">
+            android:padding="12dp"
+            android:background="@drawable/background_circle"
+            android:orientation="vertical" >
 
             <TextView
                 android:id="@+id/text_step_count"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="3"
                 android:layout_gravity="center"
                 android:gravity="center"
-                android:text="text"
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="32sp" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                android:textColor="#ff0000"
+                android:textSize="36sp"/>
+
+            <TextView
+                android:id="@+id/text_step_title"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="2"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="STEPS TODAY"
+                android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                android:textColor="#3e3639"
+                android:textSize="20sp"/>
 
         </im.ene.androooid.jphacks.widgets.SquareLinearLayoutByHeight>
 

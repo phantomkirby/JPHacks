@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/show_easy_or_hard_video_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Want to show different video?"
+        android:layout_gravity="center_horizontal"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="70dp"/>
+
+    <Button
+        android:id="@+id/confirm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Button"
+        android:layout_gravity="start"
+        android:layout_marginTop="103dp"
+        android:layout_below="@+id/show_easy_or_hard_video_textView"
+        android:layout_toStartOf="@+id/decline"/>
+
+    <Button
+        android:id="@+id/decline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Button"
+        android:layout_alignBaseline="@+id/confirm"
+        android:layout_alignBottom="@+id/confirm"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="77dp"/>
+
+</RelativeLayout>
