@@ -43,6 +43,11 @@
 
         <!--SERVICES-->
         <service android:name=".ChatHeadService" />
+
+        <activity
+            android:name=".WearSensorSampleActivity"
+            android:label="@string/title_activity_wear_sensor_sample" >
+        </activity>
     </application>
 
 </manifest>
