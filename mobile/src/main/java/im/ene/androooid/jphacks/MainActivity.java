@@ -8,9 +8,10 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Typeface;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.media.MediaRouteSelector;
+import android.support.v7.media.MediaRouter;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,11 +25,11 @@ import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.interfaces.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.YLabels;
+import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.fitness.Fitness;
@@ -53,7 +54,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import im.ene.androooid.jphacks.callback.WearSensorCallback;
 import im.ene.androooid.jphacks.utils.StringUtils;
+import im.ene.androooid.jphacks.utils.WearSensorUtil;
 import im.ene.androooid.jphacks.widgets.SquareGifImageByWidth;
 
 import static im.ene.androooid.jphacks.Constants.CONNECTION_FAILURE_RESOLUTION_REQUEST;
@@ -64,7 +67,7 @@ import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_LONGITUDE;
 import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_RADIUS_METERS;
 
 
-public class MainActivity extends ActionBarActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnChartValueSelectedListener, ResultCallback<DataReadResult> {
+public class MainActivity extends ActionBarActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnChartValueSelectedListener, ResultCallback<DataReadResult>, WearSensorCallback {
     public static final String TAG = MainActivity.class.getSimpleName();
     //GOOGLE FIT CONSTANT
     private static final int REQUEST_OAUTH = 1;
@@ -75,11 +78,12 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
      */
     private static final String AUTH_PENDING = "auth_state_pending";
     private static final String[] mMonths = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"};
-
     private static final int LOCATION_INTERVAL = 5000;
     // Internal List of Geofence objects. In a real app, these might be provided by an API based on
     // locations within the user's proximity.
     List<Geofence> mGeofenceList;
+    //FOR WEAR AND UPDATING THE NUMBER OF STEPS IN BOTTOM LEFT OF ACTIVITY
+    private WearSensorUtil mWearSensorUtil;
     private boolean authInProgress = false;
     /**
      * Google Api Client stuffs defined here
@@ -87,6 +91,13 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private DataReadRequest mDataReadRequest;
+
+    private MediaRouter mMediaRouter;
+    private MediaRouteSelector mMediaRouteSelector;
+    private MediaRouter.Callback mMediaRouterCallback;
+    private CastDevice mSelectedDevice;
+
+
     private Location mLastLocation = StringUtils.TEST_LOCATION;
     // These will store hard-coded geofences in this sample app.
 //    private SimpleGeofence mAndroidBuildingGeofence;
@@ -105,6 +116,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
     private BarChart mChart;
     private SquareGifImageByWidth mAvatar;
+
     private TextView mTextStep;
     private volatile ObjectAnimator objectAnimator = null;
     private int mCounter = 0;
@@ -125,6 +137,10 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
         // TODO: call chathead later
         mChatHeadIntent = new Intent(this, ChatHeadService.class);
+        mWearSensorUtil = new WearSensorUtil(this);
+
+        //TODO: call chathead later
+        startService(new Intent(this, ChatHeadService.class));
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -190,7 +206,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
          */
 
         mTextStep = (TextView) findViewById(R.id.text_step_count);
-        mTextStep.setText("" + (int) mChart.getYChartMax());
 
     }
 
@@ -213,6 +228,10 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
         // FIXME (eneim): the app will automatically call necessary stuff by Callbacks
 //        trackUserComingHome();
+        mTextStep.setText("0");
+
+        //TODO: CALL THIS METHOD WHEN USER COMES BACK HOME
+        //trackUserComingHome();
     }
 
     private void trackUserComingHome() {
@@ -285,19 +304,97 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 //                        }
 //                )
 //                .build();
+
+        //new
+//        PendingResult<DataReadResult> pendingResult =
+//                Fitness.HistoryApi.readData(mGoogleApiClient, new DataReadRequest.Builder()
+//                        .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+//                        .bucketByTime(1, TimeUnit.DAYS)
+//                                //userLeftHomeTime = startTime, current system time = end time
+//                        .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+//                        .build());
+
+        //original
+//        DataReadResult dataReadResult =
+//                Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
+        //new
+//        DataReadResult dataReadResult = pendingResult.await();
+
+
+        //TODO: for eneim... put these data into the graph however you like...
+        //bucket is basically the days, and the most important number is dp.getValue(field)
+        //and field = steps in order to get the value of steps in that day.
+//        if (dataReadResult.getBuckets().size() > 0)
+//        {
+//            Log.i(TAG, "Number of returned buckets of DataSets is: "
+//                    + dataReadResult.getBuckets().size());
+//            for (Bucket bucket : dataReadResult.getBuckets()) {
+//                List<DataSet> dataSets = bucket.getDataSets();
+//                for (DataSet dataSet : dataSets) {
+//                    Log.i("", "Data returned for Data type: " + dataSet.getDataType().getName());
+//                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/M/yyyy hh:mm:ss");
+//
+//                    for (DataPoint dp : dataSet.getDataPoints()) {
+//                        Log.i("", "Data pointLOL:");
+//                        Log.i("", "\tTypeLOL: " + dp.getDataType().getName());
+//                        Log.i("", "\tStartLOL: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+//                        Log.i("", "\tEndLOL: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
+//                        for(Field field : dp.getDataType().getFields()) {
+//                            Log.i("", "\tFieldLOL: " + field.getName() +
+//                                    " ValueLOL: " + dp.getValue(field));
+//                            //only this one gets called
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        else if (dataReadResult.getDataSets().size() > 0) {
+//            Log.i(TAG, "Number of returned DataSets is: "
+//                    + dataReadResult.getDataSets().size());
+//            for (DataSet dataSet : dataReadResult.getDataSets()) {
+//                Log.i(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+//                SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss");
+//
+//                for (DataPoint dp : dataSet.getDataPoints()) {
+//                    Log.i(TAG, "Data point:");
+//                    Log.i(TAG, "\tType: " + dp.getDataType().getName());
+//                    Log.i(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
+//                    Log.i(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
+//                    for (Field field : dp.getDataType().getFields()) {
+//                        Log.i(TAG, "\tField: " + field.getName() +
+//                                " Value: " + dp.getValue(field));
+//                        //this one does not get called
+//                    }
+//                }
+//            }
+//        }
+//
+//        //CALL DIALOG?
+//        return null;
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         stopService(mChatHeadIntent);
+
+        // Add the callback to start device discovery
+        mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
+                MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
+
+        mWearSensorUtil.setCallback(this);
+        mWearSensorUtil.resume();
     }
 
     @Override
     protected void onPause() {
         // Remove the callback to stop device discovery
-        super.onPause();
+        mMediaRouter.removeCallback(mMediaRouterCallback);
+        mWearSensorUtil.removeCallback();
         startService(mChatHeadIntent);
+        super.onPause();
+
     }
 
     @Override
@@ -375,6 +472,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         if (null != mGeofenceRequestIntent) {
             LocationServices.GeofencingApi.removeGeofences(mGoogleApiClient, mGeofenceRequestIntent);
         }
+        mWearSensorUtil.stop();
     }
 
     @Override
@@ -588,11 +686,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
     }
 
-    // Defines the allowable request types (in this example, we only add geofences).
-    private enum REQUEST_TYPE {
-        ADD
-    }
-
     // TODO: set action for each situation
     private void showNotificationDialog(Context context, int todayResult, int averageResult) {
         if (todayResult > averageResult) {
@@ -632,5 +725,28 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
             dialog.show();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        mWearSensorUtil.destroy();
+        super.onDestroy();
+    }
+
+    @Override
+    public void onHeartRateChanged(float heartRate) {
+        //do nothing in this implemented method
+        //Log.d(TAG, "heart rate:"+heartRate);
+    }
+
+    @Override
+    public void onStepDetected(int sumOfSteps) {
+        Log.d(TAG, "steps:" + sumOfSteps);
+        mTextStep.setText(sumOfSteps + "");
+    }
+
+    // Defines the allowable request types (in this example, we only add geofences).
+    private enum REQUEST_TYPE {
+        ADD
     }
 }

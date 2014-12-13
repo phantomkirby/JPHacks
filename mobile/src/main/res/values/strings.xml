@@ -10,6 +10,7 @@
     <string name="start_geofence_service">Starting geofence transition service</string>
     <string name="entering_geofence">Entering the GeoFence zone</string>
     <string name="exiting_geofence">Exiting the GeoFence zone</string>
+
     <string name="video_url">https://www.youtube.com/watch?v=PqJNc9KVIZE</string>
     <string name="play_video">Play Video</string>
     <string name="pause_video">Pause Video</string>
@@ -21,4 +22,7 @@
     <string name="assistant_okaeri">%sさん、おかえりなさい</string>
     <string name="assistant_futoi">%sさん、うんどうしましょうよ</string>
     <string name="assistant_karui">%sさん、うんどうがじょうずですね</string>
+    <string name="title_activity_video_view_to_tv">VideoViewToTV</string>
+
+    <string name="title_activity_wear_sensor_sample">Sensor Sample</string>
 </resources>
