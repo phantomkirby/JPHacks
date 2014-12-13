@@ -1,19 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">JPHacks</string>
+    <string name="app_name">Android x Health</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-    <string name="app_id">501E22A8</string>
+    <string name="app_id">42450315</string>
     <string name="media_route_menu_title"><![CDATA[Play on&#8230;]]></string>
+
+    <string name="start_geofence_service">Starting geofence transition service</string>
+    <string name="entering_geofence">Entering the GeoFence zone</string>
+    <string name="exiting_geofence">Exiting the GeoFence zone</string>
+
     <string name="video_url">https://www.youtube.com/watch?v=PqJNc9KVIZE</string>
     <string name="play_video">Play Video</string>
     <string name="pause_video">Pause Video</string>
     <string name="resume_video">Resume Video</string>
     <string name="video_title">Tell your World</string>
     <string name="content_type_mp4">video/mp4</string>
+
+    <string name="assistant_ohayo">%sさん、おはようございます</string>
+    <string name="assistant_okaeri">%sさん、おかえりなさい</string>
+    <string name="assistant_futoi">%sさん、うんどうしましょうよ</string>
+    <string name="assistant_karui">%sさん、うんどうがじょうずですね</string>
     <string name="title_activity_video_view_to_tv">VideoViewToTV</string>
 
     <string name="title_activity_wear_sensor_sample">Sensor Sample</string>
-
 </resources>

@@ -27,9 +27,10 @@ public class ChatHeadService extends Service implements IconCallback
     @Override
     public void onCreate() {
         super.onCreate();
-        //TODO change this iconView into Android-ify GIF!!!
+        // TODO change this iconView into Android-ify GIF!!!
         ImageView iconView = new ImageView(this);
         iconView.setImageResource(R.drawable.ic_launcher);
+
         mMagnet = new Magnet.Builder(this)
                 .setIconView(iconView)
                 .setIconCallback(this)
@@ -40,6 +41,7 @@ public class ChatHeadService extends Service implements IconCallback
                 .setRemoveIconShouldBeResponsive(true)
                 .build();
         mMagnet.show();
+
     }
 
 
