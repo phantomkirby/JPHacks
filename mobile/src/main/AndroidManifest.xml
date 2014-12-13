@@ -54,7 +54,6 @@
         <activity
             android:name=".VideoViewToTV"
             android:label="@string/app_name">
-
         </activity>
 
         <activity
