@@ -203,7 +203,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         });
 
         //TODO: CALL THIS METHOD WHEN USER COMES BACK HOME
-        trackUserComingHome();
+        //trackUserComingHome();
     }
 
     private void trackUserComingHome()
@@ -358,6 +358,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
                         for(Field field : dp.getDataType().getFields()) {
                             Log.i("", "\tFieldLOL: " + field.getName() +
                                     " ValueLOL: " + dp.getValue(field));
+                            //only this one gets called
                         }
                     }
                 }
@@ -378,10 +379,13 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
                     for (Field field : dp.getDataType().getFields()) {
                         Log.i(TAG, "\tField: " + field.getName() +
                                 " Value: " + dp.getValue(field));
+                        //this one does not get called
                     }
                 }
             }
         }
+
+        //CALL DIALOG?
         return null;
     }
 
