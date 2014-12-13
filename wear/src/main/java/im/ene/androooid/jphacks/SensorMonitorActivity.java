@@ -10,7 +10,7 @@ import android.os.Bundle;
 /**
  * Created by Takahiko on 2014/12/13.
  */
-public abstract class SensorMonitorActivity extends Activity implements SensorEventListener {
+public abstract class SensorMonitorActivity extends WearMessageActivity implements SensorEventListener {
     private static final String TAG = "SensorMonitorActivity";
 
     private SensorManager mSensorManager;
@@ -30,7 +30,7 @@ public abstract class SensorMonitorActivity extends Activity implements SensorEv
 
         mSensorManager = ((SensorManager)getSystemService(SENSOR_SERVICE));
         mHeartRateSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
-        mStepsDetectorSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        mStepsDetectorSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
     }
 
     @Override
@@ -67,10 +67,12 @@ public abstract class SensorMonitorActivity extends Activity implements SensorEv
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()) {
             case Sensor.TYPE_HEART_RATE:
-                mCallback.onHeartRateChanged(event.values[0], mHeartRateAccuracy);
+                float heartRate = event.values[0];
+                if (heartRate>1.0)
+                    mCallback.onHeartRateChanged(event.values[0], mHeartRateAccuracy);
                 break;
             case Sensor.TYPE_STEP_DETECTOR:
-                mCallback.onStepDetected(mSumOfSteps, mStepsDetectorAccuracy);
+                mCallback.onStepDetected(++mSumOfSteps, mStepsDetectorAccuracy);
                 break;
         }
     }

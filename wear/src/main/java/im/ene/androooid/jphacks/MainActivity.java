@@ -17,6 +17,9 @@ import android.widget.TextView;
 public class MainActivity extends SensorMonitorActivity implements SensorEventListener, SensorMonitorCallback {
     private static final String TAG = "MainActivity";
 
+    public static final String SENSOR_TYPE_HEART_RATE = "heartRate";
+    public static final String SENSOR_TYPE_STEPS = "steps";
+
     private TextView mTextView;
     private ImageView mImageViewHeart;
 
@@ -58,19 +61,41 @@ public class MainActivity extends SensorMonitorActivity implements SensorEventLi
 
     @Override
     public void onHeartRateChanged(float heartRate, int accuracy) {
+        // send to mobile
+        sendSensorToMobile(SENSOR_TYPE_HEART_RATE, heartRate);
+
+        // display value
         StringBuilder builder = new StringBuilder();
         builder.append("heart rate:");
         builder.append(heartRate);
-
         mTextView.setText(builder.toString());
+
+//        Log.d(TAG, builder.toString());
     }
 
     @Override
     public void onStepDetected(int sumOfSteps, int accuracy) {
+        // send to mobile
+        sendSensorToMobile(SENSOR_TYPE_STEPS, sumOfSteps);
+
+        // display value
         StringBuilder builder = new StringBuilder();
         builder.append("walked:");
         builder.append(sumOfSteps);
-
         mTextView.setText(builder.toString());
+
+        Log.d(TAG, builder.toString());
+    }
+
+    private void sendSensorToMobile(String sensorName, String value) {
+        sendMessage(sensorName + ':' + value);
+    }
+
+    private void sendSensorToMobile(String sensorName, float value) {
+        sendSensorToMobile(sensorName, value+"");
+    }
+
+    private void sendSensorToMobile(String sensorName, int value) {
+        sendSensorToMobile(sensorName, value+"");
     }
 }
