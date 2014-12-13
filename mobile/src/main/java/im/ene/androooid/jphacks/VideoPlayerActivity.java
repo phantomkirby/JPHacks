@@ -10,7 +10,7 @@ import com.google.android.youtube.player.YouTubePlayerView;
 /**
  * Activity is called if user only wants video on phone
  */
-public class VideoView extends YouTubeBaseActivity implements YouTubePlayer.OnInitializedListener
+public class VideoPlayerActivity extends YouTubeBaseActivity implements YouTubePlayer.OnInitializedListener
 {
 
     private final String APIKEY = "AIzaSyBMP9t4pFD0xtux5nSnQBXwMRRqdEOE2CY";
@@ -27,12 +27,14 @@ public class VideoView extends YouTubeBaseActivity implements YouTubePlayer.OnIn
         youTubePlayerView.initialize(APIKEY, this);
     }
 
+
     @Override
     public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean wasRestored)
     {
         if (!wasRestored) {
             youTubePlayer.cueVideo("PqJNc9KVIZE");
         }
+
     }
 
     @Override

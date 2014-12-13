@@ -16,4 +16,9 @@
     <string name="resume_video">Resume Video</string>
     <string name="video_title">Tell your World</string>
     <string name="content_type_mp4">video/mp4</string>
+
+    <string name="assistant_ohayo">%sさん、おはようございます</string>
+    <string name="assistant_okaeri">%sさん、おかえりなさい</string>
+    <string name="assistant_futoi">%sさん、うんどうしましょうよ</string>
+    <string name="assistant_karui">%sさん、うんどうがじょうずですね</string>
 </resources>

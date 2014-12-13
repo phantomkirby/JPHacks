@@ -65,7 +65,7 @@ import static im.ene.androooid.jphacks.Constants.TODAI_BUILDING_RADIUS_METERS;
 
 
 public class MainActivity extends ActionBarActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnChartValueSelectedListener, ResultCallback<DataReadResult> {
-    public static final String TAG = MainActivity.class.getCanonicalName();
+    public static final String TAG = MainActivity.class.getSimpleName();
     //GOOGLE FIT CONSTANT
     private static final int REQUEST_OAUTH = 1;
     /**
