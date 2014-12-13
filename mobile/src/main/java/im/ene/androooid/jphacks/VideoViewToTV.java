@@ -65,7 +65,7 @@ public class VideoViewToTV extends ActionBarActivity {
         // Configure Cast device discovery
         mMediaRouter = MediaRouter.getInstance( getApplicationContext() );
         mMediaRouteSelector = new MediaRouteSelector.Builder()
-                .addControlCategory( CastMediaControlIntent.categoryForCast(getString(R.string.app_id)) )
+                .addControlCategory( CastMediaControlIntent.categoryForCast(CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID) )
                 .build();
         mMediaRouterCallback = new MediaRouterCallback();
     }
@@ -202,7 +202,7 @@ public class VideoViewToTV extends ActionBarActivity {
                 reconnectChannels( hint );
             } else {
                 try {
-                    Cast.CastApi.launchApplication( mApiClient, getString( R.string.app_id ), false )
+                    Cast.CastApi.launchApplication( mApiClient,CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID , false )
                             .setResultCallback( new ResultCallback<Cast.ApplicationConnectionResult>() {
                                                     @Override
                                                     public void onResult(Cast.ApplicationConnectionResult applicationConnectionResult) {
