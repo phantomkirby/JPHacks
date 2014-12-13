@@ -1,1 +1,1 @@
-include ':mobile', ':tv', ':wear', ':magnet'
+include ':mobile', ':tv', ':wear', ':timelytextview', ':magnet'
