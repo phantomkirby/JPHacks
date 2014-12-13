@@ -24,7 +24,16 @@
         <im.ene.androooid.jphacks.widgets.SquareLinearLayoutByHeight
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:background="#3e3639">
+            android:background="#CFD8DC">
+
+            <im.ene.androooid.timelytextview.TimelyView
+                android:id="@+id/text_step_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textSize="32sp" />
 
         </im.ene.androooid.jphacks.widgets.SquareLinearLayoutByHeight>
 
@@ -32,8 +41,13 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="#ff0000">
+            android:background="#ECEFF1"
+            android:padding="8dp">
 
+            <com.github.mikephil.charting.charts.BarChart
+                android:id="@+id/chart_steps_count_week"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
         </LinearLayout>
     </LinearLayout>
 
