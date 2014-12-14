@@ -41,10 +41,10 @@ public class VideoViewToTV extends ActionBarActivity implements WearSensorCallba
 {
     private static String videoToLoad;
     private static final String[] hardVideos =
-            {"https://www.youtube.com/watch?v=QtYgmDEddug",
-             "https://www.youtube.com/watch?v=52uvwCi03yE",
-             "https://www.youtube.com/watch?v=ZJ8Zdj0OPMI"};
-    private static final String easyVideo = "https://www.youtube.com/watch?v=q5nyrD4eM64";
+            {"http://www.googledrive.com/host/0B5oyJCoT20suTzhqdkY4V29Hczg/bootyshaking.mp4",
+             "http://www.googledrive.com/host/0B5oyJCoT20suTzhqdkY4V29Hczg/victoriasecret.mp4",
+             "http://www.googledrive.com/host/0B5oyJCoT20suTzhqdkY4V29Hczg/video1.mp4"};
+    private static final String easyVideo = "http://www.googledrive.com/host/0B5oyJCoT20suTzhqdkY4V29Hczg/bootyshaking.mp4";
     Random r;
     final int Low = 0;
     final int High = 2;
@@ -159,9 +159,10 @@ public class VideoViewToTV extends ActionBarActivity implements WearSensorCallba
 
         if (videoToLoad == null)
         {
-            Toast.makeText(this, "initializing video", Toast.LENGTH_SHORT).show();
-            videoToLoad = "http://www.googledrive.com/host/0B5oyJCoT20suTzhqdkY4V29Hczg/video1.mp4";
+            videoToLoad = "http://www.googledrive.com/host/0B5oyJCoT20suTzhqdkY4V29Hczg/bootyshaking.mp4";
         }
+
+        Toast.makeText(this, "initializing video " + videoToLoad, Toast.LENGTH_SHORT).show();
 
         //getString(R.string.video_url)
         MediaInfo mediaInfo = new MediaInfo.Builder(videoToLoad)
