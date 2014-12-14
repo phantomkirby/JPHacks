@@ -11,11 +11,11 @@
     <string name="entering_geofence">Entering the GeoFence zone</string>
     <string name="exiting_geofence">Exiting the GeoFence zone</string>
 
-    <string name="video_url">http://www.googledrive.com/host/0B5oyJCoT20suTzhqdkY4V29Hczg/video1.mp4</string>
+    <!--<string name="video_url">http://www.googledrive.com/host/0B5oyJCoT20suTzhqdkY4V29Hczg/video1.mp4</string>-->
     <string name="play_video">Play Video</string>
     <string name="pause_video">Pause Video</string>
     <string name="resume_video">Resume Video</string>
-    <string name="video_title">Tell your World</string>
+    <string name="video_title">Exercise Video</string>
     <string name="content_type_mp4">video/mp4</string>
 
     <string name="assistant_ohayo">%sさん、おはようございます</string>
