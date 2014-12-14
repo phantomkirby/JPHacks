@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Typeface;
 import android.location.Location;
-import android.media.AudioTrack;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.media.MediaRouteSelector;
@@ -18,7 +17,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.data.BarData;
@@ -36,7 +34,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.fitness.Fitness;
-import com.google.android.gms.fitness.data.Bucket;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSet;
 import com.google.android.gms.fitness.data.DataType;
@@ -151,9 +148,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         mChatHeadIntent = new Intent(this, ChatHeadService.class);
         mWearSensorUtil = new WearSensorUtil(this);
 
-//        //TODO: call chathead later
-//        startService(new Intent(this, ChatHeadService.class));
-
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .addApi(ActivityRecognition.API)
@@ -260,154 +254,14 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         //trackUserComingHome();
     }
 
-    private void trackUserComingHome() {
-        buildFitnessClient();
-    }
-
-    /**
-     * Build a {@link GoogleApiClient} that will authenticate the user and allow the application
-     * to connect to Fitness APIs. The scopes included should match the scopes your app needs
-     * (see documentation for details). Authentication will occasionally fail intentionally,
-     * and in those cases, there will be a known resolution, which the OnConnectionFailedListener()
-     * can address. Examples of this include the user never having signed in before, or having
-     * multiple accounts on the device and needing to specify which account to use, etc.
-     */
-    private void buildFitnessClient() {
-        // Create the Google API Client
-//        mGoogleApiClient = new GoogleApiClient.Builder(this)
-//                .addApi(Fitness.API)
-//                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
-//                .addConnectionCallbacks(
-//                        new GoogleApiClient.ConnectionCallbacks() {
-//
-//                            @Override
-//                            public void onConnected(Bundle bundle) {
-//                                Log.i(TAG, "Connected!!!");
-//                                // Now you can make calls to the Fitness APIs.
-//                                // Put application specific code here.
-//                                new RetrieveData().execute();
-//                            }
-//
-//                            @Override
-//                            public void onConnectionSuspended(int i) {
-//                                // If your connection to the sensor gets lost at some point,
-//                                // you'll be able to determine the reason and react to it here.
-//                                if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
-//                                    Log.i(TAG, "Connection lost.  Cause: Network Lost.");
-//                                } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
-//                                    Log.i(TAG, "Connection lost.  Reason: Service Disconnected");
-//                                }
-//                            }
-//                        }
-//                )
-//                .addOnConnectionFailedListener(
-//                        new GoogleApiClient.OnConnectionFailedListener() {
-//                            // Called whenever the API client fails to connect.
-//                            @Override
-//                            public void onConnectionFailed(ConnectionResult result) {
-//                                Log.i(TAG, "Connection failed. Cause: " + result.toString());
-//                                if (!result.hasResolution()) {
-//                                    // Show the localized error dialog
-//                                    GooglePlayServicesUtil.getErrorDialog(result.getErrorCode(),
-//                                            MainActivity.this, 0).show();
-//                                    return;
-//                                }
-//                                // The failure has a resolution. Resolve it.
-//                                // Called typically when the app is not yet authorized, and an
-//                                // authorization dialog is displayed to the user.
-//                                if (!authInProgress) {
-//                                    try {
-//                                        Log.i(TAG, "Attempting to resolve failed connection");
-//                                        authInProgress = true;
-//                                        result.startResolutionForResult(MainActivity.this,
-//                                                REQUEST_OAUTH);
-//                                    } catch (IntentSender.SendIntentException e) {
-//                                        Log.e(TAG,
-//                                                "Exception while starting resolution activity", e);
-//                                    }
-//                                }
-//                            }
-//                        }
-//                )
-//                .build();
-
-        //new
-//        PendingResult<DataReadResult> pendingResult =
-//                Fitness.HistoryApi.readData(mGoogleApiClient, new DataReadRequest.Builder()
-//                        .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-//                        .bucketByTime(1, TimeUnit.DAYS)
-//                                //userLeftHomeTime = startTime, current system time = end time
-//                        .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-//                        .build());
-
-        //original
-//        DataReadResult dataReadResult =
-//                Fitness.HistoryApi.readData(mGoogleApiClient, readRequest).await(1, TimeUnit.MINUTES);
-        //new
-//        DataReadResult dataReadResult = pendingResult.await();
-
-
-        //TODO: for eneim... put these data into the graph however you like...
-        //bucket is basically the days, and the most important number is dp.getValue(field)
-        //and field = steps in order to get the value of steps in that day.
-//        if (dataReadResult.getBuckets().size() > 0)
-//        {
-//            Log.i(TAG, "Number of returned buckets of DataSets is: "
-//                    + dataReadResult.getBuckets().size());
-//            for (Bucket bucket : dataReadResult.getBuckets()) {
-//                List<DataSet> dataSets = bucket.getDataSets();
-//                for (DataSet dataSet : dataSets) {
-//                    Log.i("", "Data returned for Data type: " + dataSet.getDataType().getName());
-//                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/M/yyyy hh:mm:ss");
-//
-//                    for (DataPoint dp : dataSet.getDataPoints()) {
-//                        Log.i("", "Data pointLOL:");
-//                        Log.i("", "\tTypeLOL: " + dp.getDataType().getName());
-//                        Log.i("", "\tStartLOL: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-//                        Log.i("", "\tEndLOL: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
-//                        for(Field field : dp.getDataType().getFields()) {
-//                            Log.i("", "\tFieldLOL: " + field.getName() +
-//                                    " ValueLOL: " + dp.getValue(field));
-//                            //only this one gets called
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        else if (dataReadResult.getDataSets().size() > 0) {
-//            Log.i(TAG, "Number of returned DataSets is: "
-//                    + dataReadResult.getDataSets().size());
-//            for (DataSet dataSet : dataReadResult.getDataSets()) {
-//                Log.i(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
-//                SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm:ss");
-//
-//                for (DataPoint dp : dataSet.getDataPoints()) {
-//                    Log.i(TAG, "Data point:");
-//                    Log.i(TAG, "\tType: " + dp.getDataType().getName());
-//                    Log.i(TAG, "\tStart: " + dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS)));
-//                    Log.i(TAG, "\tEnd: " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS)));
-//                    for (Field field : dp.getDataType().getFields()) {
-//                        Log.i(TAG, "\tField: " + field.getName() +
-//                                " Value: " + dp.getValue(field));
-//                        //this one does not get called
-//                    }
-//                }
-//            }
-//        }
-//
-//        //CALL DIALOG?
-//        return null;
-
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
         stopService(mChatHeadIntent);
 
         // Add the callback to start device discovery
-        mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
-                MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
+//            mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
+//                    MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
 
         mWearSensorUtil.setCallback(this);
         mWearSensorUtil.resume();
@@ -416,7 +270,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     @Override
     protected void onPause() {
         // Remove the callback to stop device discovery
-        mMediaRouter.removeCallback(mMediaRouterCallback);
+//        mMediaRouter.removeCallback(mMediaRouterCallback);
         mWearSensorUtil.removeCallback();
         startService(mChatHeadIntent);
         super.onPause();
@@ -443,6 +297,12 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+
+        if (id == R.id.pretendToComeBackHome)
+        {
+            //simulate
+            showNotificationDialog(this, 5, 7);
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -648,19 +508,29 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
+    //IMPORTANT: DO NOT CHANGE THIS METHOD... IT WORKS SO LEAVE IT XD
     @Override
     public void onResult(DataReadResult dataReadResult) {
 
         // if any of these occurs, then there is no result
         if (dataReadResult.getDataSets().size() <= 0 && dataReadResult.getBuckets().size() <= 0)
+        {
+            Log.e("omg onResult not proceeded", "omg onResult not proceeded");
             return;
+        }
 
-        /**
-         *  from here we set value to the chart;
-         */
+        ArrayList<String> xVals = new ArrayList<String>();
+        SimpleDateFormat dateFormatForDays = new SimpleDateFormat("MM-dd");
 
-        // this is a demo
-        setData(3, 100);
+        for (int i = 0; i < 7; i++)
+        {
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(System.currentTimeMillis() - i*86400000); // 86400000 = 24 hours
+            String formattedDate = dateFormatForDays.format(cal.getTime());
+            xVals.add(formattedDate);
+        }
+
+        ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
 
         //TODO: for eneim... put these data into the graph however you like...
         //bucket is basically the days, and the most important number is dp.getValue(field)
@@ -668,8 +538,8 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         if (dataReadResult.getBuckets().size() > 0) {
             Log.i(TAG, "Number of returned buckets of DataSets is: "
                     + dataReadResult.getBuckets().size());
-            for (Bucket bucket : dataReadResult.getBuckets()) {
-                List<DataSet> dataSets = bucket.getDataSets();
+            for (int i = 0; i < dataReadResult.getBuckets().size(); i++) {
+                List<DataSet> dataSets = dataReadResult.getBuckets().get(i).getDataSets();
                 for (DataSet dataSet : dataSets) {
                     Log.i("", "Data returned for Data type: " + dataSet.getDataType().getName());
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd/M/yyyy hh:mm:ss");
@@ -682,6 +552,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
                         for (Field field : dp.getDataType().getFields()) {
                             Log.i("", "\tFieldLOL: " + field.getName() +
                                     " ValueLOL: " + dp.getValue(field));
+                            yVals1.add(new BarEntry(dp.getValue(field).asInt(), i));
                         }
                     }
                 }
@@ -706,10 +577,15 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             }
         }
 
-        // I prefer we have the value of today
-        // call this with suitable value
-        // showNotificationDialog(this, int1, int2);
+        BarDataSet set1 = new BarDataSet(yVals1, "DataSet");
+        set1.setBarSpacePercent(35f);
 
+        ArrayList<BarDataSet> dataSets = new ArrayList<BarDataSet>();
+        dataSets.add(set1);
+
+        BarData data = new BarData(xVals, dataSets);
+
+        mChart.setData(data);
     }
 
     // TODO: set action for each situation
@@ -735,17 +611,24 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         } else {
             // negative notification here
             // prositive notification here
-            AlertDialog dialog = new AlertDialog.Builder(context).setMessage("Good Jobs")
-                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            AlertDialog dialog = new AlertDialog.Builder(context).setMessage("Bad Job... need to exercise. Work out using Phone or TV?")
+                    .setNegativeButton("Phone", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            //TODO: crashes no matter what
+                            Intent intent = new Intent("im.ene.androooid.jphacks.VideoViewToTV");
+                            getPackageManager().resolveService(intent,0);
+                            intent.setAction("com.google.android.youtube.api.service.START");
                             dialog.dismiss();
+                            startActivity(intent);
                         }
                     })
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    .setPositiveButton("TV", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            Intent intent = new Intent(MainActivity.this,VideoViewToTV.class);
                             dialog.dismiss();
+                            startActivity(intent);
                         }
                     }).create();
 
@@ -762,7 +645,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     @Override
     public void onHeartRateChanged(float heartRate) {
         //do nothing in this implemented method
-        //Log.d(TAG, "heart rate:"+heartRate);
+        Log.d(TAG, "heart rate:"+heartRate);
     }
 
     @Override
