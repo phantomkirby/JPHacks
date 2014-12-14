@@ -160,7 +160,7 @@ public class VideoViewToTV extends ActionBarActivity implements WearSensorCallba
         if (videoToLoad == null)
         {
             Toast.makeText(this, "initializing video", Toast.LENGTH_SHORT).show();
-            videoToLoad = "https://www.youtube.com/watch?v=NUieo6Mc9EA";
+            videoToLoad = getString(R.string.video_url);
         }
 
         //getString(R.string.video_url)
