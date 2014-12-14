@@ -11,7 +11,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -63,12 +66,18 @@ public class VideoViewToTV extends ActionBarActivity implements WearSensorCallba
     private boolean mVideoIsLoaded;
     private boolean mIsPlaying;
 
+    private ImageView mImageViewHeart;
+
     @Override
     protected void onCreate( Bundle savedInstanceState ) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_video_view_to_tv );
 
-        tv_heartRate = (TextView) findViewById(R.id.heartRate);
+//        tv_heartRate = (TextView) findViewById(R.id.heartRate);
+
+        mImageViewHeart = (ImageView) findViewById(R.id.image_heart);
+        Animation heartFlashAnimation = AnimationUtils.loadAnimation(this, R.anim.heart_flash);
+        mImageViewHeart.startAnimation(heartFlashAnimation);
 
         mButton = (Button) findViewById( R.id.button );
         mButton.setOnClickListener( new View.OnClickListener() {
