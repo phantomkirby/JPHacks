@@ -73,10 +73,14 @@ public class VideoViewToTV extends ActionBarActivity implements WearSensorCallba
 
     private ImageView mImageViewHeart;
 
+
     private LineChart lineChart;
     private int indexForChart = 0;
     ArrayList<String> indexes = new ArrayList<>();
     ArrayList<Entry> values = new ArrayList<Entry>();
+
+    private TextView mHeartBeat;
+
 
     @Override
     protected void onCreate( Bundle savedInstanceState ) {
@@ -90,6 +94,8 @@ public class VideoViewToTV extends ActionBarActivity implements WearSensorCallba
         mImageViewHeart = (ImageView) findViewById(R.id.image_heart);
         Animation heartFlashAnimation = AnimationUtils.loadAnimation(this, R.anim.heart_flash);
         mImageViewHeart.startAnimation(heartFlashAnimation);
+
+        mHeartBeat = (TextView) findViewById(R.id.text_heart_beat);
 
         mButton = (Button) findViewById( R.id.button );
         mButton.setOnClickListener( new View.OnClickListener() {
