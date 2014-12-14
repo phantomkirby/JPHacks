@@ -615,7 +615,10 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
                     .setNegativeButton("Phone", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            Intent intent = new Intent(MainActivity.this,VideoPlayerActivity.class);
+                            //TODO: crashes no matter what
+                            Intent intent = new Intent("im.ene.androooid.jphacks.VideoViewToTV");
+                            getPackageManager().resolveService(intent,0);
+                            intent.setAction("com.google.android.youtube.api.service.START");
                             dialog.dismiss();
                             startActivity(intent);
                         }
@@ -642,7 +645,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     @Override
     public void onHeartRateChanged(float heartRate) {
         //do nothing in this implemented method
-        //Log.d(TAG, "heart rate:"+heartRate);
+        Log.d(TAG, "heart rate:"+heartRate);
     }
 
     @Override
