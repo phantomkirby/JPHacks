@@ -48,6 +48,7 @@
                 android:src="@drawable/heart_icon" />
 
             <TextView
+                android:id="@+id/heartRate"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -57,6 +58,12 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Title"
                 android:textColor="#ff0000"
                 android:textSize="36sp" />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/heart_chart"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent" />
         </LinearLayout>
         <im.ene.androooid.jphacks.widgets.SquareGifImageByWidth
             android:id="@+id/image_avatar"
@@ -67,6 +74,5 @@
             android:src="@drawable/androidify_fat_exercise"
             android:layout_gravity="center_horizontal"/>
     </LinearLayout>
-
 
 </LinearLayout>

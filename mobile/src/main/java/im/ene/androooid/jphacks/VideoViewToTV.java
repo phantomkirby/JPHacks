@@ -18,6 +18,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
 import com.google.android.gms.cast.ApplicationMetadata;
 import com.google.android.gms.cast.Cast;
 import com.google.android.gms.cast.CastDevice;
@@ -32,6 +36,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Random;
 
 import im.ene.androooid.jphacks.callback.WearSensorCallback;
@@ -68,12 +73,19 @@ public class VideoViewToTV extends ActionBarActivity implements WearSensorCallba
 
     private ImageView mImageViewHeart;
 
+    private LineChart lineChart;
+    private int indexForChart = 0;
+    ArrayList<String> indexes = new ArrayList<>();
+    ArrayList<Entry> values = new ArrayList<Entry>();
+
     @Override
     protected void onCreate( Bundle savedInstanceState ) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_video_view_to_tv );
 
-//        tv_heartRate = (TextView) findViewById(R.id.heartRate);
+        tv_heartRate = (TextView) findViewById(R.id.heartRate);
+
+        lineChart = (LineChart) findViewById(R.id.heart_chart);
 
         mImageViewHeart = (ImageView) findViewById(R.id.image_heart);
         Animation heartFlashAnimation = AnimationUtils.loadAnimation(this, R.anim.heart_flash);
@@ -351,6 +363,19 @@ public class VideoViewToTV extends ActionBarActivity implements WearSensorCallba
     public void onHeartRateChanged(float heartRate) {
         Log.d("", "heart rate:" + heartRate);
         tv_heartRate.setText(Float.toString(heartRate));
+
+
+        Entry c1e1 = new Entry(heartRate, indexForChart); // 0 == quarter 1
+        values.add(c1e1);
+        indexes.add(Integer.toString(indexForChart));
+        indexForChart++;
+
+        LineDataSet HeartRateDataSet = new LineDataSet(values, "HeartRate");
+        ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
+        dataSets.add(HeartRateDataSet);
+        LineData data = new LineData(indexes, dataSets);
+        lineChart.setData(data);
+
         if (heartRate > 100) //TODO: change this number to be more suitable
         {
 
@@ -386,7 +411,6 @@ public class VideoViewToTV extends ActionBarActivity implements WearSensorCallba
         }
         else if (heartRate < 80) //TODO: change this number to be more suitable
         {
-
             final Dialog dialog = new Dialog(this);
             dialog.setTitle("We Noticed You have Heartrate < 80...");
             dialog.setContentView(R.layout.load_new_video_dialog);
