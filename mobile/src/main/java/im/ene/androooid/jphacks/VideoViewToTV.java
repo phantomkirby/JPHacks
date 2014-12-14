@@ -344,6 +344,7 @@ public class VideoViewToTV extends ActionBarActivity implements WearSensorCallba
         tv_heartRate.setText(Float.toString(heartRate));
         if (heartRate > 100) //TODO: change this number to be more suitable
         {
+
             final Dialog dialog = new Dialog(this);
             dialog.setTitle("We Noticed You have Heartrate > 100...");
             dialog.setContentView(R.layout.load_new_video_dialog);
