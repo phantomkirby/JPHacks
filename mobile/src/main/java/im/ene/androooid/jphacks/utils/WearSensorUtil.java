@@ -3,12 +3,14 @@ package im.ene.androooid.jphacks.utils;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
+
 
 import im.ene.androooid.jphacks.callback.WearSensorCallback;
 
@@ -24,6 +26,8 @@ public class WearSensorUtil implements MessageApi.MessageListener, GoogleApiClie
     private GoogleApiClient mWearApiClient;
     private WearSensorCallback mCallback;
 
+    private Handler mHandler;
+
     public WearSensorUtil(Context context) {
         Log.d(TAG, "constructor");
 
@@ -33,6 +37,8 @@ public class WearSensorUtil implements MessageApi.MessageListener, GoogleApiClie
                 .build();
 
         mWearApiClient.connect();
+
+        mHandler = new Handler();
     }
 
     public void resume() {
@@ -75,11 +81,21 @@ public class WearSensorUtil implements MessageApi.MessageListener, GoogleApiClie
         String arr[] = message.split(":");
         String type = arr[0];
         if (SENSOR_TYPE_HEART_RATE.equals(type)) {
-            float heartRate = Float.parseFloat(arr[1]);
-            mCallback.onHeartRateChanged(heartRate);
+            final float heartRate = Float.parseFloat(arr[1]);
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mCallback.onHeartRateChanged(heartRate);
+                }
+            });
         } else if(SENSOR_TYPE_STEPS.equals(type)) {
-            int steps = Integer.parseInt(arr[1]);
-            mCallback.onStepDetected(steps);
+            final int steps = Integer.parseInt(arr[1]);
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mCallback.onStepDetected(steps);
+                }
+            });
         }
     }
 
