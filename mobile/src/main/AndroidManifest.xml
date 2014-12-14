@@ -45,7 +45,7 @@
         <service android:name=".service.ChatHeadService" />
 
         <service
-            android:name=".service.GeofenceTransitionsIntentService"
+            android:name="im.ene.androooid.jphacks.service.GeofenceTransitionsIntentService"
             android:exported="false"></service>
 
         <meta-data

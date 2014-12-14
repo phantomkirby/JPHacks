@@ -245,7 +245,9 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         mTextStep.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, VideoViewToTV.class);
+                Intent intent = new Intent(MainActivity.this, VideoPlayerActivity.class);
+//                getPackageManager().resolveService(intent,0);
+//                intent.setAction("com.google.android.youtube.api.service.START");
                 startActivity(intent);
             }
         });
@@ -467,7 +469,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         mGeofenceRequestIntent = getGeofenceTransitionPendingIntent();
         LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, mGeofenceList,
                 mGeofenceRequestIntent);
-//        Toast.makeText(this, getString(R.string.start_geofence_service), Toast.LENGTH_SHORT).show();
 
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
@@ -586,22 +587,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
      */
     public void createGeofences() {
         // Create internal "flattened" objects containing the geofence data.
-//        mAndroidBuildingGeofence = new SimpleGeofence(
-//                ANDROID_BUILDING_ID,                // geofenceId.
-//                ANDROID_BUILDING_LATITUDE,
-//                ANDROID_BUILDING_LONGITUDE,
-//                ANDROID_BUILDING_RADIUS_METERS,
-//                GEOFENCE_EXPIRATION_TIME,
-//                Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT
-//        );
-//        mYerbaBuenaGeofence = new SimpleGeofence(
-//                YERBA_BUENA_ID,                // geofenceId.
-//                YERBA_BUENA_LATITUDE,
-//                YERBA_BUENA_LONGITUDE,
-//                YERBA_BUENA_RADIUS_METERS,
-//                GEOFENCE_EXPIRATION_TIME,
-//                Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT
-//        );
 
         mTodaiGeofence = new SimpleGeofence(
                 TODAI_BUILDING_ID,                // geofenceId.
@@ -613,11 +598,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         );
 
         // Store these flat versions in SharedPreferences and add them to the geofence list.
-//        mGeofenceStorage.setGeofence(ANDROID_BUILDING_ID, mAndroidBuildingGeofence);
-//        mGeofenceStorage.setGeofence(YERBA_BUENA_ID, mYerbaBuenaGeofence);
         mGeofenceStorage.setGeofence(TODAI_BUILDING_ID, mTodaiGeofence);
-//        mGeofenceList.add(mAndroidBuildingGeofence.toGeofence());
-//        mGeofenceList.add(mYerbaBuenaGeofence.toGeofence());
         mGeofenceList.add(mTodaiGeofence.toGeofence());
     }
 
