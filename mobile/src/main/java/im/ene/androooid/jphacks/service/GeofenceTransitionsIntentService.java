@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package im.ene.androooid.jphacks;
+package im.ene.androooid.jphacks.service;
 
-import static im.ene.androooid.jphacks.Constants.CONNECTION_TIME_OUT_MS;
-import static im.ene.androooid.jphacks.Constants.GEOFENCE_DATA_ITEM_PATH;
-import static im.ene.androooid.jphacks.Constants.GEOFENCE_DATA_ITEM_URI;
-import static im.ene.androooid.jphacks.Constants.KEY_GEOFENCE_ID;
-import static im.ene.androooid.jphacks.Constants.TAG;
+import static im.ene.androooid.jphacks.utils.Constants.CONNECTION_TIME_OUT_MS;
+import static im.ene.androooid.jphacks.utils.Constants.GEOFENCE_DATA_ITEM_PATH;
+import static im.ene.androooid.jphacks.utils.Constants.GEOFENCE_DATA_ITEM_URI;
+import static im.ene.androooid.jphacks.utils.Constants.KEY_GEOFENCE_ID;
+import static im.ene.androooid.jphacks.utils.Constants.TAG;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -36,6 +36,8 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.Wearable;
 
 import java.util.concurrent.TimeUnit;
+
+import im.ene.androooid.jphacks.R;
 
 /**
  * Listens for geofence transition changes.
