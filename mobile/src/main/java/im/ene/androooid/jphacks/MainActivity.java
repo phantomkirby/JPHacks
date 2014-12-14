@@ -15,8 +15,8 @@ import android.support.v7.media.MediaRouter;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.data.BarData;
@@ -236,13 +236,13 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
 //        mTextStep = (TimelyView) findViewById(R.id.text_step_count);
 //
-//        mTextStep.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                objectAnimator =  mTextStep.animate(mCounter, ++mCounter);
-//                objectAnimator.setDuration(1000);
-//            }
-//        });
+        mTextStep.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, VideoViewToTV.class);
+                startActivity(intent);
+            }
+        });
 
         //TODO: CALL THIS METHOD WHEN USER COMES BACK HOME
 
@@ -327,7 +327,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         mGeofenceRequestIntent = getGeofenceTransitionPendingIntent();
         LocationServices.GeofencingApi.addGeofences(mGoogleApiClient, mGeofenceList,
                 mGeofenceRequestIntent);
-        Toast.makeText(this, getString(R.string.start_geofence_service), Toast.LENGTH_SHORT).show();
+//        Toast.makeText(this, getString(R.string.start_geofence_service), Toast.LENGTH_SHORT).show();
 
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
@@ -667,8 +667,8 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             // Just display a message for now; In a real app this would be the
             // hook  to connect to the selected device and launch the receiver
             // app
-            Toast.makeText(MainActivity.this,
-                    "TODO: Connect", Toast.LENGTH_LONG).show();
+//            Toast.makeText(MainActivity.this,
+//                    "TODO: Connect", Toast.LENGTH_LONG).show();
         }
 
         @Override

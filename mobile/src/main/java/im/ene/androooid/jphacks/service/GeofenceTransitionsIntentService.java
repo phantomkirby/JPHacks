@@ -95,8 +95,10 @@ public class GeofenceTransitionsIntentService extends IntentService
                     Log.e(TAG, "Failed to send data item: " + putDataMapRequest
                             + " - Client disconnected from Google Play Services");
                 }
-                Toast.makeText(this, getString(R.string.entering_geofence),
-                        Toast.LENGTH_SHORT).show();
+
+                // entering geofence area
+//                Toast.makeText(this, getString(R.string.entering_geofence),
+//                        Toast.LENGTH_SHORT).show();
                 mGoogleApiClient.disconnect();
             } else if (Geofence.GEOFENCE_TRANSITION_EXIT == transitionType) {
                 // Delete the data item when leaving a geofence region.
