@@ -8,40 +8,49 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="wrap_content"
-        android:layout_height="200dp"
-        android:layout_centerHorizontal="true"
-        android:src="@drawable/phone_tv" />
-
-    <Button
-        android:id="@+id/button"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@drawable/button_background"
-        android:text="Play Video On TV!" />
+        android:layout_height="0dp"
+        android:layout_centerHorizontal="true"
+        android:layout_weight="5"
+        android:src="@drawable/phone_tv" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="96dp"
-        android:orientation="horizontal">
+        android:layout_height="0dp"
+        android:layout_weight="8"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/image_heart"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:padding="16dp"
-            android:src="@drawable/heart_icon" />
+        <Button
+            android:id="@+id/button"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@drawable/button_background"
+            android:text="Play Video On TV!" />
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:textAppearance="@style/TextAppearance.AppCompat.Title"
-            android:textColor="#ff0000"
-            android:paddingLeft="16dp"
-            android:gravity="center_vertical"
-            android:text="Heartbeat"
-            android:textSize="36sp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/image_heart"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:padding="16dp"
+                android:src="@drawable/heart_icon" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="Heartbeat"
+                android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                android:textColor="#ff0000"
+                android:textSize="36sp" />
+        </LinearLayout>
     </LinearLayout>
+
 
 </LinearLayout>
