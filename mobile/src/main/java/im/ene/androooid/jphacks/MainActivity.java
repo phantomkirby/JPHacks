@@ -610,7 +610,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
         } else {
             // negative notification here
-            // prositive notification here
+            StringUtils.saySomething("運動してください。運動してください。太りたくないいいいいいいいいい");
             AlertDialog dialog = new AlertDialog.Builder(context).setMessage("Bad Job... need to exercise. Work out using Phone or TV?")
                     .setNegativeButton("Phone", new DialogInterface.OnClickListener() {
                         @Override
