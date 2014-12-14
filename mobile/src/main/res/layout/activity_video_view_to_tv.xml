@@ -40,15 +40,16 @@
                 android:src="@drawable/heart_icon" />
 
             <TextView
+                android:id="@+id/text_heart_beat"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
                 android:paddingLeft="16dp"
-                android:text="Heartbeat"
+                android:maxLines="2"
+                android:text="Connecting to your heart..."
                 android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                android:textColor="#ff0000"
-                android:textSize="36sp" />
+                android:textColor="#ff0000" />
         </LinearLayout>
     </LinearLayout>
 

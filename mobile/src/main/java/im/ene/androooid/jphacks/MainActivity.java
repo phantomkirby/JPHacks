@@ -16,7 +16,6 @@ import android.support.v7.media.MediaRouter;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
@@ -171,7 +170,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         // Create a MediaRouter callback for discovery events
         mMediaRouterCallback = new MyMediaRouterCallback();
 
-
         // Instantiate a new geofence storage area.
         mGeofenceStorage = new SimpleGeofenceStore(this);
         // Instantiate the current List of geofences.
@@ -235,23 +233,11 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         super.onStart();
         mGoogleApiClient.connect();
 
-//        mTextStep = (TimelyView) findViewById(R.id.text_step_count);
-//
-        mTextStep.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, VideoPlayerActivity.class);
-//                getPackageManager().resolveService(intent,0);
-//                intent.setAction("com.google.android.youtube.api.service.START");
-                startActivity(intent);
-            }
-        });
-
         //TODO: CALL THIS METHOD WHEN USER COMES BACK HOME
 
         // FIXME (eneim): the app will automatically call necessary stuff by Callbacks
 //        trackUserComingHome();
-        mTextStep.setText("0");
+        mTextStep.setText("Connecting...");
 
         //TODO: CALL THIS METHOD WHEN USER COMES BACK HOME
         //trackUserComingHome();
@@ -378,20 +364,21 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
                 Log.e(TAG, "Exception while resolving connection error.", e);
             }
         }
-        // The failure has a resolution. Resolve it.
-        // Called typically when the app is not yet authorized, and an
-        // authorization dialog is displayed to the user.
-        if (!authInProgress) {
-            try {
-                Log.i(TAG, "Attempting to resolve failed connection");
-                authInProgress = true;
-                connectionResult.startResolutionForResult(MainActivity.this,
-                        REQUEST_OAUTH);
-            } catch (IntentSender.SendIntentException e) {
-                Log.e(TAG,
-                        "Exception while starting resolution activity", e);
-            }
-        }
+
+//        // The failure has a resolution. Resolve it.
+//        // Called typically when the app is not yet authorized, and an
+//        // authorization dialog is displayed to the user.
+//        if (!authInProgress) {
+//            try {
+//                Log.i(TAG, "Attempting to resolve failed connection");
+//                authInProgress = true;
+//                connectionResult.startResolutionForResult(MainActivity.this,
+//                        REQUEST_OAUTH);
+//            } catch (IntentSender.SendIntentException e) {
+//                Log.e(TAG,
+//                        "Exception while starting resolution activity", e);
+//            }
+//        }
 
     }
 
@@ -407,8 +394,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
     @Override
     public void onLocationChanged(Location location) {
-
-//        mLastLocation = StringUtils.TEST_LOCATION;
         mLastLocation = location;
     }
 
@@ -527,7 +512,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             }
         }
 
-        BarDataSet set1 = new BarDataSet(yVals1, "DataSet");
+        BarDataSet set1 = new BarDataSet(yVals1, "");
         set1.setBarSpacePercent(35f);
 
         ArrayList<BarDataSet> dataSets = new ArrayList<BarDataSet>();
