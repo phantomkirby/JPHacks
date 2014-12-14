@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Typeface;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.media.MediaRouteSelector;
@@ -300,8 +301,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        if (id == R.id.pretendToComeBackHome)
-        {
+        if (id == R.id.pretendToComeBackHome) {
             //simulate
             showNotificationDialog(this, 5, 7);
         }
@@ -312,14 +312,13 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     @Override
     public void onConnected(Bundle bundle) {
         new TextToSpeechTask("せつぞくできました").execute();
-//        new RetrieveData().execute();
 
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(LOCATION_INTERVAL); // Update location every second
 
-        LocationServices.FusedLocationApi.setMockMode(mGoogleApiClient, true);
-        LocationServices.FusedLocationApi.setMockLocation(mGoogleApiClient, StringUtils.TEST_LOCATION);
+//        LocationServices.FusedLocationApi.setMockMode(mGoogleApiClient, true);
+//        LocationServices.FusedLocationApi.setMockLocation(mGoogleApiClient, StringUtils.TEST_LOCATION);
 
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient, mLocationRequest, this);
@@ -359,6 +358,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         if (null != mGeofenceRequestIntent) {
             LocationServices.GeofencingApi.removeGeofences(mGoogleApiClient, mGeofenceRequestIntent);
         }
+
         mWearSensorUtil.stop();
     }
 
@@ -405,40 +405,11 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
 
     }
 
-    private void setData(DataReadResult dataReadResult) {
-
-    }
-
-    private void setData(int count, float range) {
-
-        ArrayList<String> xVals = new ArrayList<String>();
-        for (int i = 0; i < count; i++) {
-            xVals.add(mMonths[i % 12]);
-        }
-
-        ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
-
-        for (int i = 0; i < count; i++) {
-            int mult = (int) (range + 1);
-            int val = 5000 + (int) (Math.random() * mult);
-            yVals1.add(new BarEntry(val, i));
-        }
-
-        BarDataSet set1 = new BarDataSet(yVals1, "DataSet");
-        set1.setBarSpacePercent(35f);
-
-        ArrayList<BarDataSet> dataSets = new ArrayList<BarDataSet>();
-        dataSets.add(set1);
-
-        BarData data = new BarData(xVals, dataSets);
-
-        mChart.setData(data);
-    }
-
     @Override
     public void onLocationChanged(Location location) {
 
-        mLastLocation = StringUtils.TEST_LOCATION;
+//        mLastLocation = StringUtils.TEST_LOCATION;
+        mLastLocation = location;
     }
 
     /**
@@ -494,8 +465,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     public void onResult(DataReadResult dataReadResult) {
 
         // if any of these occurs, then there is no result
-        if (dataReadResult.getDataSets().size() <= 0 && dataReadResult.getBuckets().size() <= 0)
-        {
+        if (dataReadResult.getDataSets().size() <= 0 && dataReadResult.getBuckets().size() <= 0) {
             Log.e("omg onResult not proceeded", "omg onResult not proceeded");
             return;
         }
@@ -503,10 +473,9 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
         ArrayList<String> xVals = new ArrayList<String>();
         SimpleDateFormat dateFormatForDays = new SimpleDateFormat("MM-dd");
 
-        for (int i = 0; i < 7; i++)
-        {
+        for (int i = 0; i < 7; i++) {
             Calendar cal = Calendar.getInstance();
-            cal.setTimeInMillis(System.currentTimeMillis() - i*86400000); // 86400000 = 24 hours
+            cal.setTimeInMillis(System.currentTimeMillis() - i * 86400000); // 86400000 = 24 hours
             String formattedDate = dateFormatForDays.format(cal.getTime());
             xVals.add(formattedDate);
         }
@@ -597,17 +566,25 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             //TODO: crashes no matter what
-                            Intent intent = new Intent("im.ene.androooid.jphacks.VideoViewToTV");
-                            getPackageManager().resolveService(intent,0);
-                            intent.setAction("com.google.android.youtube.api.service.START");
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                Intent intent = new Intent("im.ene.androooid.jphacks.VideoPlayerActivity");
+                                getPackageManager().resolveService(intent, 0);
+                                intent.setAction("com.google.android.youtube.api.service.START");
+                                startActivity(intent);
+
+                            } else {
+                                Intent intent = new Intent(MainActivity.this, VideoPlayerActivity.class);
+                                startActivity(intent);
+                            }
+
                             dialog.dismiss();
-                            startActivity(intent);
+
                         }
                     })
                     .setPositiveButton("TV", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            Intent intent = new Intent(MainActivity.this,VideoViewToTV.class);
+                            Intent intent = new Intent(MainActivity.this, VideoViewToTV.class);
                             dialog.dismiss();
                             startActivity(intent);
                         }
@@ -626,7 +603,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
     @Override
     public void onHeartRateChanged(float heartRate) {
         //do nothing in this implemented method
-        Log.d(TAG, "heart rate:"+heartRate);
+        Log.d(TAG, "heart rate:" + heartRate);
     }
 
     @Override
@@ -651,8 +628,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener,
             // Just display a message for now; In a real app this would be the
             // hook  to connect to the selected device and launch the receiver
             // app
-//            Toast.makeText(MainActivity.this,
-//                    "TODO: Connect", Toast.LENGTH_LONG).show();
+
         }
 
         @Override
