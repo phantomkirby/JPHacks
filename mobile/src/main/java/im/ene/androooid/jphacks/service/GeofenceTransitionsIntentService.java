@@ -59,6 +59,8 @@ public class GeofenceTransitionsIntentService extends IntentService
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
+
+        Log.d("geofence service", "created");
     }
 
     /**
@@ -68,12 +70,13 @@ public class GeofenceTransitionsIntentService extends IntentService
      */
     @Override
     protected void onHandleIntent(Intent intent) {
+        Log.e(TAG, "Handling data");
         GeofencingEvent geoFenceEvent = GeofencingEvent.fromIntent(intent);
         if (geoFenceEvent.hasError()) {
             int errorCode = geoFenceEvent.getErrorCode();
             Log.e(TAG, "Location Services error: " + errorCode);
         } else {
-
+            Log.e(TAG, "Location Services success");
             int transitionType = geoFenceEvent.getGeofenceTransition();
             if (Geofence.GEOFENCE_TRANSITION_ENTER == transitionType) {
                 // Connect to the Google Api service in preparation for sending a DataItem.

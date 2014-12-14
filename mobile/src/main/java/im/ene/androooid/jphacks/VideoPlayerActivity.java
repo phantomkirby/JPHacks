@@ -1,6 +1,10 @@
 package im.ene.androooid.jphacks;
 
 import android.os.Bundle;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.android.youtube.player.YouTubeBaseActivity;
 import com.google.android.youtube.player.YouTubeInitializationResult;
@@ -15,7 +19,11 @@ public class VideoPlayerActivity extends YouTubeBaseActivity implements YouTubeP
 
     private final String APIKEY = "AIzaSyBMP9t4pFD0xtux5nSnQBXwMRRqdEOE2CY";
 
-    YouTubePlayerView youTubePlayerView;
+    private YouTubePlayerView youTubePlayerView;
+
+    private ImageView mImageHeart;
+
+    private TextView mHeartBeat;
 
     @Override
     protected void onCreate(Bundle bundle)
@@ -25,6 +33,13 @@ public class VideoPlayerActivity extends YouTubeBaseActivity implements YouTubeP
 
         youTubePlayerView = (YouTubePlayerView) findViewById(R.id.youtubePlayerView);
         youTubePlayerView.initialize(APIKEY, this);
+
+        mImageHeart = (ImageView) findViewById(R.id.image_heart);
+        Animation heartFlashAnimation = AnimationUtils.loadAnimation(this, R.anim.heart_flash);
+        mImageHeart.startAnimation(heartFlashAnimation);
+
+        mHeartBeat = (TextView) findViewById(R.id.text_heart_beat);
+
     }
 
 
